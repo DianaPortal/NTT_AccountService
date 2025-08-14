@@ -1,0 +1,181 @@
+openapi: "3.0.1"
+info:
+  title: Account Service API
+  description: API para gestionar cuentas bancarias.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8085
+    description: Servidor local
+paths:
+  /api/accounts:
+    post:
+      summary: Crear una nueva cuenta bancaria
+      operationId: registerAccount
+      requestBody:
+        description: Detalles de la nueva cuenta bancaria
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRequest"
+      responses:
+        '200':
+          description: Cuenta creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+    get:
+      summary: Listar todas las cuentas
+      operationId: listAccounts
+      responses:
+        '200':
+          description: Lista de cuentas bancarias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponse"
+  /api/accounts/{id}:
+    get:
+      summary: Obtener cuenta por ID
+      operationId: getAccountById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos de la cuenta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+    put:
+      summary: Actualizar cuenta existente
+      operationId: updateAccount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Datos actualizados de la cuenta bancaria
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRequest"
+      responses:
+        '200':
+          description: Cuenta actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+    delete:
+      summary: Eliminar cuenta
+      operationId: deleteAccount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cuenta eliminada exitosamente
+components:
+  schemas:
+    AccountRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único de la cuenta bancaria
+        accountNumber:
+          type: string
+          description: Número de cuenta autogenerado (11 dígitos)
+        interbankNumber:
+          type: string
+          description: Número de cuenta interbancario autogenerado (20 dígitos)
+        holderDocument:
+          type: string
+          description: Documento del titular de la cuenta
+        authorizedSigners:
+          type: array
+          description: Lista de documentos de firmantes autorizados
+          items:
+            type: string
+        accountType:
+          type: string
+          description: Tipo de cuenta (SAVINGS, CHECKING, FIXED_TERM)
+          enum: [SAVINGS, CHECKING, FIXED_TERM]
+        balance:
+          type: number
+          description: Saldo disponible en la cuenta
+        interestRate:
+          type: number
+          description: Tasa de interés anual (%)
+        creationDate:
+          type: string
+          format: date
+          description: Fecha de creación de la cuenta
+        active:
+          type: boolean
+          description: Estado de la cuenta (true = activa, false = inactiva)
+        linkedCard:
+          type: object
+          description: Tarjeta asociada a la cuenta
+          properties:
+            id:
+              type: string
+              description: ID único de la tarjeta vinculada
+    AccountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único de la cuenta bancaria
+        accountNumber:
+          type: string
+          description: Número de cuenta  (11 dígitos)
+        interbankNumber:
+          type: string
+          description: Número de cuenta interbancario  (20 dígitos)
+        holderDocument:
+          type: string
+          description: Documento del titular de la cuenta
+        authorizedSigners:
+          type: array
+          description: Lista de documentos de firmantes autorizados
+          items:
+            type: string
+        accountType:
+          type: string
+          description: Tipo de cuenta (SAVINGS, CHECKING, FIXED_TERM)
+          enum: [SAVINGS, CHECKING, FIXED_TERM]
+        balance:
+          type: number
+          description: Saldo disponible en la cuenta
+        interestRate:
+          type: number
+          description: Tasa de interés anual (%)
+        creationDate:
+          type: string
+          format: date
+          description: Fecha de creación de la cuenta
+        active:
+          type: boolean
+          description: Estado de la cuenta (true = activa, false = inactiva)
+        linkedCard:
+          type: object
+          description: Tarjeta asociada a la cuenta
+          properties:
+            id:
+              type: string
+              description: ID único de la tarjeta vinculada
