@@ -121,6 +121,15 @@ components:
         interestRate:
           type: number
           description: Tasa de interés anual (%)
+        monthlyMovementLimit:
+          type: integer
+          description: Límite mensual de movimientos (solo para cuentas SAVINGS)
+        maintenanceFee:
+          type: number
+          description: Comisión de mantenimiento (solo para cuentas CHECKING)
+        allowedDayOfMonth:
+          type: integer
+          description: Día del mes permitido para movimiento (solo para cuentas FIXED_TERM)
         creationDate:
           type: string
           format: date
@@ -129,12 +138,7 @@ components:
           type: boolean
           description: Estado de la cuenta (true = activa, false = inactiva)
         linkedCard:
-          type: object
-          description: Tarjeta asociada a la cuenta
-          properties:
-            id:
-              type: string
-              description: ID único de la tarjeta vinculada
+          $ref: "#/components/schemas/LinkedCard"
     AccountResponse:
       type: object
       properties:
@@ -143,10 +147,10 @@ components:
           description: ID único de la cuenta bancaria
         accountNumber:
           type: string
-          description: Número de cuenta  (11 dígitos)
+          description: Número de cuenta (11 dígitos)
         interbankNumber:
           type: string
-          description: Número de cuenta interbancario  (20 dígitos)
+          description: Número de cuenta interbancario (20 dígitos)
         holderDocument:
           type: string
           description: Documento del titular de la cuenta
@@ -165,6 +169,15 @@ components:
         interestRate:
           type: number
           description: Tasa de interés anual (%)
+        monthlyMovementLimit:
+          type: integer
+          description: Límite mensual de movimientos (solo para cuentas SAVINGS)
+        maintenanceFee:
+          type: number
+          description: Comisión de mantenimiento (solo para cuentas CHECKING)
+        allowedDayOfMonth:
+          type: integer
+          description: Día del mes permitido para movimiento (solo para cuentas FIXED_TERM)
         creationDate:
           type: string
           format: date
@@ -173,9 +186,10 @@ components:
           type: boolean
           description: Estado de la cuenta (true = activa, false = inactiva)
         linkedCard:
-          type: object
-          description: Tarjeta asociada a la cuenta
-          properties:
-            id:
-              type: string
-              description: ID único de la tarjeta vinculada
+          $ref: "#/components/schemas/LinkedCard"
+    LinkedCard:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único de la tarjeta vinculada
