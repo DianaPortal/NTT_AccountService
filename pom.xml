@@ -137,8 +137,8 @@
 						<configuration>
 							<inputSpec>${project.basedir}/src/main/resources/api.yml</inputSpec>
 							<generatorName>spring</generatorName>
-							<apiPackage>com.nttdata.api</apiPackage>
-							<modelPackage>com.nttdata.model</modelPackage>
+							<apiPackage>com.nttdata.account_service.api</apiPackage>
+							<modelPackage>com.nttdata.account_service.model</modelPackage>
 							<supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
 							<configOptions>
 								<delegatePattern>true</delegatePattern>

@@ -1,10 +1,12 @@
 package com.nttdata.account_service.service.impl;
 
+import com.nttdata.account_service.model.AccountRequest;
+import com.nttdata.account_service.model.AccountResponse;
 import com.nttdata.account_service.model.entity.Account;
-import com.nttdata.model.LinkedCard;
+import com.nttdata.account_service.service.AccountMapper;
 import com.nttdata.account_service.repository.AccountRepository;
+
 import com.nttdata.account_service.service.AccountService;
-import com.nttdata.model.AccountResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,35 +24,47 @@ public class AccountServiceImpl implements AccountService {
     public ResponseEntity<List<AccountResponse>> listAccounts() {
         List<AccountResponse> responses = accountRepository.findAll()
                 .stream()
-                .map(this::toResponse)
+                .map(AccountMapper::toResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responses);
     }
 
-    private AccountResponse toResponse(Account account) {
-        AccountResponse response = new AccountResponse();
-        response.setId(account.getId());
-        response.setAccountNumber(account.getAccountNumber());
-        response.setInterbankNumber(account.getInterbankNumber());
-        response.setHolderDocument(account.getHolderDocument());
-        response.setAuthorizedSigners(account.getAuthorizedSigners());
-        if (account.getAccountType() != null) {
-            response.setAccountType(AccountResponse.AccountTypeEnum.fromValue(account.getAccountType()));
-        }
-        response.setBalance(account.getBalance());
-        response.setInterestRate(account.getInterestRate());
-        response.setMonthlyMovementLimit(account.getMonthlyMovementLimit());
-        response.setMaintenanceFee(account.getMaintenanceFee());
-        response.setAllowedDayOfMonth(account.getAllowedDayOfMonth());
-        response.setCreationDate(account.getCreationDate());
-        response.setActive(account.getActive());
-        if (account.getLinkedCard() != null) {
-            LinkedCard card = new LinkedCard();
-            card.setId(account.getLinkedCard().getId());
-            response.setLinkedCard(card);
-        }
-
-        return response;
+    @Override
+    public ResponseEntity<AccountResponse> getAccountById(String id) {
+        return accountRepository.findById(id)
+                .map(AccountMapper::toResponse)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
+
+
+    @Override
+    public ResponseEntity<AccountResponse> createAccount(AccountRequest request) {
+        Account account = AccountMapper.toEntity(request);
+        Account saved = accountRepository.save(account);
+        return ResponseEntity.ok(AccountMapper.toResponse(saved));
+    }
+
+    @Override
+    public ResponseEntity<AccountResponse> updateAccount(String id, AccountRequest request) {
+        return accountRepository.findById(id)
+                .map(existing -> {
+                    Account account = AccountMapper.toEntity(request);
+                    account.setId(existing.getId());
+                    Account updated = accountRepository.save(account);
+                    return ResponseEntity.ok(AccountMapper.toResponse(updated));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteAccount(String id) {
+        return accountRepository.findById(id)
+                .map(account -> {
+                    accountRepository.deleteById(id);
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
