@@ -9,9 +9,13 @@ Este repositorio corresponde al Avance 1 del proyecto, donde se implementa el mi
 Base URL: http://localhost:8085/api/accounts
 
 POST /api/accounts – Crea cuenta (SAVINGS | CHECKING | FIXED_TERM)
+
 GET /api/accounts – Lista todas
+
 GET /api/accounts/{{id}} – Busca por id
+
 PUT /api/accounts/{{id}} – Actualiza
+
 DELETE /api/accounts/{{id}} – Elimina
 
 
