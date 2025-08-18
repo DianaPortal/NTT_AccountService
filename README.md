@@ -17,7 +17,9 @@ DELETE /api/accounts/{{id}} – Elimina
 
 # Diagramas UML
 Muestra la interacción entre Clientes, Transacciones, Cuentas y Créditos.
+![](https://github.com/user-attachments/assets/288b7378-24f4-4be6-97f2-167f06baee26)
 
 
 # Diagrama de Secuencia CRUD Cuentas
 
+<img width="981" height="1315" alt="image" src="https://github.com/user-attachments/assets/0e064823-14be-482d-917a-35402bed412f" />
