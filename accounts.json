@@ -1,0 +1,50 @@
+[
+  {
+    "_id": "acc001",
+    "accountNumber": "12345678901",
+    "interbankNumber": "12345678901234567890",
+    "holderDocument": "DOC123456",
+    "authorizedSigners": ["DOC654321", "DOC789012"],
+    "accountType": "SAVINGS",
+    "balance": 2500.50,
+    "interestRate": 0.4,
+    "monthlyMovementLimit": 10,
+    "maintenanceFee": null,
+    "allowedDayOfMonth": null,
+    "creationDate": { "$date": "2024-01-15T00:00:00Z" },
+    "active": true,
+    "linkedCard": { "id": "card001" }
+  },
+  {
+    "_id": "acc002",
+    "accountNumber": "23456789012",
+    "interbankNumber": "23456789012345678901",
+    "holderDocument": "DOC987654",
+    "authorizedSigners": ["DOC456789"],
+    "accountType": "CHECKING",
+    "balance": 5000.00,
+    "interestRate": 0.2,
+    "monthlyMovementLimit": null,
+    "maintenanceFee": 15.5,
+    "allowedDayOfMonth": null,
+    "creationDate": { "$date": "2024-03-20T00:00:00Z" },
+    "active": true,
+    "linkedCard": { "id": "card002" }
+  },
+  {
+    "_id": "acc003",
+    "accountNumber": "34567890123",
+    "interbankNumber": "34567890123456789012",
+    "holderDocument": "DOC112233",
+    "authorizedSigners": [],
+    "accountType": "FIXED_TERM",
+    "balance": 10000.00,
+    "interestRate": 1.2,
+    "monthlyMovementLimit": null,
+    "maintenanceFee": null,
+    "allowedDayOfMonth": 15,
+    "creationDate": { "$date": "2024-06-10T00:00:00Z" },
+    "active": false,
+    "linkedCard": { "id": "card003" }
+  }
+]
