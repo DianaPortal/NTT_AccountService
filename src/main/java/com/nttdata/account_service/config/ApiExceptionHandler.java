@@ -18,28 +18,30 @@ public class ApiExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleNotFound(IllegalArgumentException ex) {
         log.warn("Error 404: {}", ex.getMessage());
-        return Mono.just(buildErrorResponse(HttpStatus.NOT_FOUND, ex));
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex);
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleBadRequest(IllegalStateException ex) {
         log.warn("Error 400: {}", ex.getMessage());
-        return Mono.just(buildErrorResponse(HttpStatus.BAD_REQUEST, ex));
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex);
     }
 
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ErrorResponse>> handleInternalError(Exception ex) {
         log.error("Error 500: {}", ex.getMessage(), ex);
-        return Mono.just(buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex));
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex);
     }
 
-    private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, Exception ex) {
-        ErrorResponse error = new ErrorResponse()
-                .timestamp(OffsetDateTime.now())
-                .status(status.value())
-                .error(status.getReasonPhrase())
-                .message(ex.getMessage());
-        return ResponseEntity.status(status).body(error);
+    private Mono<ResponseEntity<ErrorResponse>> buildErrorResponse(HttpStatus status, Exception ex) {
+        return Mono.fromSupplier(() ->
+                ResponseEntity.status(status).body(
+                        new ErrorResponse()
+                                .timestamp(OffsetDateTime.now())
+                                .status(status.value())
+                                .error(status.getReasonPhrase())
+                                .message(ex.getMessage())
+                )
+        );
     }
-
 }
