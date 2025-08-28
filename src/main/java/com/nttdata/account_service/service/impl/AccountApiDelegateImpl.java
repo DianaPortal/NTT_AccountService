@@ -1,10 +1,7 @@
 package com.nttdata.account_service.service.impl;
 
 import com.nttdata.account_service.api.ApiApiDelegate;
-import com.nttdata.account_service.model.AccountLimitsResponse;
-import com.nttdata.account_service.model.AccountRequest;
-import com.nttdata.account_service.model.AccountResponse;
-import com.nttdata.account_service.model.InlineResponse200;
+import com.nttdata.account_service.model.*;
 import com.nttdata.account_service.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +23,9 @@ public class AccountApiDelegateImpl implements ApiApiDelegate {
             Mono<AccountRequest> accountRequest, ServerWebExchange exchange) {
         return accountRequest
                 .flatMap(accountService::createAccount)
-                .map(resp -> ResponseEntity.created(URI.create("/api/accounts/" + resp.getId())).body(resp));
+                .map(resp -> ResponseEntity
+                        .created(URI.create("/api/accounts/" + resp.getId()))
+                        .body(resp));
     }
 
     @Override
@@ -57,9 +56,16 @@ public class AccountApiDelegateImpl implements ApiApiDelegate {
 
     @Override
     public Mono<ResponseEntity<AccountLimitsResponse>> getAccountLimits(String id, ServerWebExchange exchange) {
-        return accountService.getAccountLimits(id).map(ResponseEntity::ok);
+        return accountService.getAccountLimits(id)
+                .map(ResponseEntity::ok);
     }
 
+    @Override
+    public Mono<ResponseEntity<BalanceOperationResponse>> applyBalanceOperation(String id, Mono<BalanceOperationRequest> balanceOperationRequest, ServerWebExchange exchange) {
+        return balanceOperationRequest
+                .flatMap(req -> accountService.applyBalanceOperation(id, req))
+                .map(ResponseEntity::ok);
+    }
 
     @Override
     public Mono<ResponseEntity<Flux<AccountResponse>>> listAccountsByHolderDocument(
