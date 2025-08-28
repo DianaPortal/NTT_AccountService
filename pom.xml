@@ -35,7 +35,7 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<!-- Tus dependencias existentes se mantienen igual -->
+		
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
