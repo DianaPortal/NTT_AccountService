@@ -16,14 +16,10 @@
 
 	<properties>
 		<java.version>11</java.version>
-<<<<<<< Updated upstream
-		<spring-cloud.version>2021.0.8</spring-cloud.version>
-=======
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- Versiones compatibles -->
 		<checkstyle.version>10.26.1</checkstyle.version>
 		<maven-checkstyle-plugin.version>3.3.1</maven-checkstyle-plugin.version>
->>>>>>> Stashed changes
 	</properties>
 
 	<dependencyManagement>
@@ -31,11 +27,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
-<<<<<<< Updated upstream
-				<version>${spring-cloud.version}</version>
-=======
 				<version>2021.0.8</version>
->>>>>>> Stashed changes
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
