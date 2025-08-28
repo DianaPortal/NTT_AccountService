@@ -6,6 +6,7 @@ public final class AccountNumberGenerator {
     private static final SecureRandom RND = new SecureRandom();
 
     private AccountNumberGenerator() {
+
     }
 
     public static String numeric(int length) {
