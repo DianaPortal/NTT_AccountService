@@ -1,15 +1,19 @@
-package com.nttdata.account_service.service;
+package com.nttdata.account_service.service.impl;
 
 import com.nttdata.account_service.api.ApiApiDelegate;
+import com.nttdata.account_service.model.AccountLimitsResponse;
 import com.nttdata.account_service.model.AccountRequest;
 import com.nttdata.account_service.model.AccountResponse;
 import com.nttdata.account_service.model.InlineResponse200;
+import com.nttdata.account_service.service.AccountService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.net.URI;
 
 @Service
 @RequiredArgsConstructor
@@ -22,9 +26,7 @@ public class AccountApiDelegateImpl implements ApiApiDelegate {
             Mono<AccountRequest> accountRequest, ServerWebExchange exchange) {
         return accountRequest
                 .flatMap(accountService::createAccount)
-                .map(ResponseEntity::ok)
-                .onErrorResume(IllegalArgumentException.class,
-                        e -> Mono.just(ResponseEntity.badRequest().build()));
+                .map(resp -> ResponseEntity.created(URI.create("/api/accounts/" + resp.getId())).body(resp));
     }
 
     @Override
@@ -37,10 +39,7 @@ public class AccountApiDelegateImpl implements ApiApiDelegate {
 
     @Override
     public Mono<ResponseEntity<AccountResponse>> getAccountById(String id, ServerWebExchange exchange) {
-        return accountService.getAccountById(id)
-                .map(ResponseEntity::ok)
-                .onErrorResume(IllegalArgumentException.class,
-                        e -> Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build()));
+        return accountService.getAccountById(id).map(ResponseEntity::ok);
     }
 
     @Override
@@ -48,10 +47,27 @@ public class AccountApiDelegateImpl implements ApiApiDelegate {
             String id, Mono<AccountRequest> accountRequest, ServerWebExchange exchange) {
         return accountRequest
                 .flatMap(req -> accountService.updateAccount(id, req))
-                .map(ResponseEntity::ok)
-                .onErrorResume(IllegalArgumentException.class,
-                        e -> Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build()));
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<Void>> deleteAccount(String id, ServerWebExchange exchange) {
+        return accountService.deleteAccount(id).thenReturn(ResponseEntity.noContent().build());
+    }
+
+    @Override
+    public Mono<ResponseEntity<AccountLimitsResponse>> getAccountLimits(String id, ServerWebExchange exchange) {
+        return accountService.getAccountLimits(id).map(ResponseEntity::ok);
     }
 
 
+    @Override
+    public Mono<ResponseEntity<Flux<AccountResponse>>> listAccountsByHolderDocument(
+            String document, ServerWebExchange exchange) {
+        return accountService.getAccountsByHolderDocument(document)
+                .collectList()
+                .map(list -> list.isEmpty()
+                        ? ResponseEntity.status(404).body(Flux.empty())
+                        : ResponseEntity.ok(Flux.fromIterable(list)));
+    }
 }

@@ -1,153 +1,308 @@
 package com.nttdata.account_service.service.impl;
 
-import com.nttdata.account_service.model.AccountRequest;
-import com.nttdata.account_service.model.AccountResponse;
+import com.nttdata.account_service.config.BusinessException;
+import com.nttdata.account_service.integration.credits.CreditsClient;
+import com.nttdata.account_service.integration.customers.CustomersClient;
+import com.nttdata.account_service.integration.customers.EligibilityResponse;
+import com.nttdata.account_service.model.*;
 import com.nttdata.account_service.model.entity.Account;
+import com.nttdata.account_service.model.entity.OpsCounter;
 import com.nttdata.account_service.repository.AccountRepository;
-import com.nttdata.account_service.service.AccountMapper;
 import com.nttdata.account_service.service.AccountService;
+import com.nttdata.account_service.service.policy.AccountPolicyService;
+import com.nttdata.account_service.service.rules.AccountRulesService;
+import com.nttdata.account_service.util.AccountNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.security.SecureRandom;
-
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
     private static final Logger log = LoggerFactory.getLogger(AccountServiceImpl.class);
+    private static final BigDecimal MIN_OPENING_BALANCE = BigDecimal.ZERO;
+
     private final AccountRepository accountRepository;
+
+    // Integraciones y servicios de dominio
+    private final CustomersClient customersClient;
+    private final CreditsClient creditsClient;
+    private final AccountRulesService accountRules;
+    private final AccountPolicyService policyService;
+
+
+    @org.springframework.beans.factory.annotation.Value("${benefit.savings.vip.requireCreditCard:true}")
+    private boolean requireCcForVip;
+    @org.springframework.beans.factory.annotation.Value("${benefit.checking.pyme.requireCreditCard:true}")
+    private boolean requireCcForPyme;
 
     @Override
     public Flux<AccountResponse> listAccounts() {
-        log.debug("Listando todas las cuentas bancarias");
-        return accountRepository.findAll()
-                .map(AccountMapper::toResponse)
-                .doOnComplete(() -> log.info("Listado de cuentas completado"));
+        return accountRepository.findAll().map(AccountMapper::toResponse);
     }
 
     @Override
     public Mono<AccountResponse> getAccountById(String id) {
-        log.debug("Buscando cuenta con ID: {}", id);
         return accountRepository.findById(id)
-                .map(AccountMapper::toResponse)
-                .doOnNext(acc -> log.info("Cuenta encontrada: {}", acc.getAccountNumber()))
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("Cuenta no encontrada con ID: " + id)));
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no encontrada con ID: " + id)))
+                .map(AccountMapper::toResponse);
     }
 
     @Override
     public Mono<AccountResponse> createAccount(AccountRequest request) {
-        log.info("Creando nueva cuenta para documento: {}", request.getHolderDocument());
-
         return validateRequest(request)
-                .then(Mono.defer(() -> {
-                    Account account = AccountMapper.toEntity(request);
+                .then(customersClient.getEligibilityByDocument(request.getHolderDocument())
+                        .switchIfEmpty(Mono.error(new BusinessException("No existe cliente activo para el documento."))))
+                .flatMap(elig -> validateAllRules(request, elig)
+                        .then(Mono.defer(() -> persistNewAccount(request, elig))))
+                .map(AccountMapper::toResponse);
+    }
 
-                    // Autogenerar números si no existen
-                    if (account.getAccountNumber() == null || account.getAccountNumber().isBlank()) {
-                        account.setAccountNumber(generateAccountNumber(11));
-                    }
-                    if (account.getInterbankNumber() == null || account.getInterbankNumber().isBlank()) {
-                        account.setInterbankNumber(generateAccountNumber(20));
-                    }
+    private Mono<Void> validateAllRules(AccountRequest req, EligibilityResponse elig) {
+        Mono<Void> legacy = accountRules.validateLegacyRules(req.getHolderDocument(), req.getAccountType(), elig.getType());
 
-                    return accountRepository.save(account);
-                }))
-                .map(AccountMapper::toResponse)
-                .doOnSuccess(acc -> log.debug("Cuenta creada con número: {}", acc.getAccountNumber()));
+        boolean isVipSavings = "PERSONAL".equals(elig.getType())
+                && "VIP".equals(elig.getProfile())
+                && req.getAccountType() == AccountRequest.AccountTypeEnum.SAVINGS;
+
+        boolean isPymeChecking = "BUSINESS".equals(elig.getType())
+                && "PYME".equals(elig.getProfile())
+                && req.getAccountType() == AccountRequest.AccountTypeEnum.CHECKING;
+
+        Mono<Void> benefit = Mono.empty();
+        if (isVipSavings && requireCcForVip) {
+            benefit = creditsClient.hasActiveCreditCard(elig.getCustomerId())
+                    .flatMap(has -> has ? Mono.empty() :
+                            Mono.error(new BusinessException("Ahorro VIP requiere tener Tarjeta de Crédito activa.")));
+        } else if (isPymeChecking && requireCcForPyme) {
+            benefit = creditsClient.hasActiveCreditCard(elig.getCustomerId())
+                    .flatMap(has -> has ? Mono.empty() :
+                            Mono.error(new BusinessException("Cuenta Corriente PYME requiere Tarjeta de Crédito activa.")));
+        }
+
+        return legacy.then(benefit);
+    }
+
+    private Mono<Account> persistNewAccount(AccountRequest req, EligibilityResponse elig) {
+        Account account = AccountMapper.toEntity(req);
+
+        // Inicializaciones
+        if (account.getCreationDate() == null) account.setCreationDate(LocalDate.now());
+        if (account.getActive() == null) account.setActive(Boolean.TRUE);
+        if (account.getBalance() == null) account.setBalance(BigDecimal.ZERO);
+        if (account.getOpIds() == null) account.setOpIds(new ArrayList<>());
+        if (account.getOpsCounter() == null) {
+            OpsCounter oc = new OpsCounter();
+            oc.setYearMonth(YearMonth.now().toString());
+            oc.setCount(0);
+            account.setOpsCounter(oc);
+        }
+
+        // PYME => sin mantenimiento
+        boolean isPymeChecking = "BUSINESS".equals(elig.getType())
+                && "PYME".equals(elig.getProfile())
+                && req.getAccountType() == AccountRequest.AccountTypeEnum.CHECKING;
+        if (isPymeChecking) {
+            account.setMaintenanceFee(BigDecimal.ZERO);
+        }
+
+        // Defaults por tipo (freeOps/fee)
+        policyService.applyDefaults(account, req.getAccountType());
+
+        // Números -con posible reintento ante colisión
+        account.setAccountNumber(AccountNumberGenerator.numeric(11));
+        account.setInterbankNumber(AccountNumberGenerator.numeric(20));
+
+        return trySaveWithRetry(account, 3);
+    }
+
+    private Mono<Account> trySaveWithRetry(Account acc, int remaining) {
+        return accountRepository.save(acc)
+                .onErrorResume(ex -> {
+                    if (ex instanceof org.springframework.dao.DuplicateKeyException && remaining > 0) {
+                        acc.setAccountNumber(AccountNumberGenerator.numeric(11));
+                        acc.setInterbankNumber(AccountNumberGenerator.numeric(20));
+                        return trySaveWithRetry(acc, remaining - 1);
+                    }
+                    return Mono.error(ex);
+                });
     }
 
     @Override
     public Mono<AccountResponse> updateAccount(String id, AccountRequest request) {
-        log.info("Actualizando cuenta con ID: {}", id);
-
         return validateRequest(request)
                 .then(accountRepository.findById(id)
-                        .switchIfEmpty(Mono.error(new IllegalArgumentException("Cuenta no encontrada con ID: " + id)))
+                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no encontrada con ID: " + id)))
                         .flatMap(existing -> {
-                            Account account = AccountMapper.toEntity(request);
-                            account.setId(existing.getId());
-
-                            // Mantener números autogenerados si no vienen en el request
-                            if (account.getAccountNumber() == null || account.getAccountNumber().isBlank()) {
-                                account.setAccountNumber(existing.getAccountNumber());
-                            }
-                            if (account.getInterbankNumber() == null || account.getInterbankNumber().isBlank()) {
-                                account.setInterbankNumber(existing.getInterbankNumber());
-                            }
-
-                            return accountRepository.save(account);
-                        })
-                        .map(AccountMapper::toResponse)
-                        .doOnSuccess(acc -> log.debug("Cuenta actualizada: {}", acc.getAccountNumber())));
+                            AccountMapper.mergeIntoEntity(existing, request);
+                            // proteger campos inmutables
+                            existing.setAccountNumber(existing.getAccountNumber());
+                            existing.setInterbankNumber(existing.getInterbankNumber());
+                            existing.setCreationDate(existing.getCreationDate());
+                            return accountRepository.save(existing);
+                        }))
+                .map(AccountMapper::toResponse);
     }
 
     @Override
     public Mono<Void> deleteAccount(String id) {
-        log.info("Solicitud de eliminación de cuenta con ID: {}", id);
         return accountRepository.findById(id)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("Cuenta no encontrada con ID: " + id)))
-                .flatMap(account -> {
-                    log.debug("Cuenta eliminada: {}", account.getAccountNumber());
-                    return accountRepository.deleteById(id);
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no encontrada con ID: " + id)))
+                .flatMap(acc -> accountRepository.deleteById(id));
+    }
+
+    @Override
+    public Mono<AccountLimitsResponse> getAccountLimits(String id) {
+        return accountRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no encontrada con ID: " + id)))
+                .map(acc -> {
+                    AccountLimitsResponse resp = new AccountLimitsResponse();
+                    resp.setFreeTransactionsLimit(acc.getFreeTransactionsLimit());
+                    resp.setCommissionFee(acc.getCommissionFee());
+                    String ymNow = YearMonth.now().toString();
+                    int used = (acc.getOpsCounter() != null && ymNow.equals(acc.getOpsCounter().getYearMonth()))
+                            ? (acc.getOpsCounter().getCount() == null ? 0 : acc.getOpsCounter().getCount())
+                            : 0;
+                    resp.setUsedTransactionsThisMonth(used);
+                    return resp;
                 });
     }
 
-    /**
-     * Validaciones de negocio (ahora reactivas)
-     */
+    @Override
+    public Mono<BalanceOperationResponse> applyBalanceOperation(String accountId, BalanceOperationRequest request) {
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0)
+            return Mono.error(new IllegalArgumentException("amount debe ser > 0"));
+        if (request.getOperationId() == null || request.getOperationId().isBlank())
+            return Mono.error(new IllegalArgumentException("operationId es obligatorio"));
+
+        return accountRepository.findById(accountId)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no encontrada")))
+                .flatMap(acc -> {
+                    if (acc.getOpIds() != null && acc.getOpIds().contains(request.getOperationId())) {
+                        return Mono.just(new BalanceOperationResponse()
+                                .applied(false).newBalance(acc.getBalance())
+                                .commissionApplied(BigDecimal.ZERO).message("Idempotente"));
+                    }
+
+                    boolean isDebit = isDebit(request.getType());
+                    if ("FIXED_TERM".equalsIgnoreCase(acc.getAccountType()) && isDebit) {
+                        int today = LocalDate.now().getDayOfMonth();
+                        if (acc.getAllowedDayOfMonth() == null || !acc.getAllowedDayOfMonth().equals(today))
+                            return Mono.error(new BusinessException("Día no permitido para débito en FIXED_TERM"));
+                    }
+
+                    BigDecimal delta = computeDelta(request.getType(), request.getAmount());
+                    if (isDebit && acc.getBalance().add(delta).compareTo(BigDecimal.ZERO) < 0)
+                        return Mono.error(new BusinessException("Saldo insuficiente"));
+
+                    String ymNow = YearMonth.now().toString();
+                    OpsCounter oc = acc.getOpsCounter();
+                    if (oc == null || !ymNow.equals(oc.getYearMonth())) {
+                        oc = new OpsCounter();
+                        oc.setYearMonth(ymNow);
+                        oc.setCount(0);
+                    }
+                    boolean counts = countsForPolicy(request.getType());
+                    int nextCount = oc.getCount() + (counts ? 1 : 0);
+
+                    int free = acc.getFreeTransactionsLimit() == null ? 0 : acc.getFreeTransactionsLimit();
+                    BigDecimal fee = acc.getCommissionFee() == null ? BigDecimal.ZERO : acc.getCommissionFee();
+                    BigDecimal commissionApplied = (counts && nextCount > free) ? fee : BigDecimal.ZERO;
+
+                    BigDecimal newBalance = acc.getBalance().add(delta);
+
+                    acc.setBalance(newBalance);
+                    oc.setCount(nextCount);
+                    acc.setOpsCounter(oc);
+                    if (acc.getOpIds() == null) acc.setOpIds(new ArrayList<>());
+                    acc.getOpIds().add(request.getOperationId());
+                    if (acc.getOpIds().size() > 200) acc.getOpIds().remove(0);
+
+                    return accountRepository.save(acc)
+                            .map(saved -> new BalanceOperationResponse()
+                                    .applied(true).newBalance(saved.getBalance())
+                                    .commissionApplied(commissionApplied).message("OK"));
+                });
+    }
+
+    @Override
+    public Flux<AccountResponse> getAccountsByHolderDocument(String holderDocument) {
+        return accountRepository.findByHolderDocument(holderDocument)
+                .map(AccountMapper::toResponse);
+    }
+
+    // ===== Helpers =====
+
+    private boolean isDebit(BalanceOperationType type) {
+        return type == BalanceOperationType.WITHDRAWAL || type == BalanceOperationType.TRANSFER_OUT;
+    }
+
+    private boolean countsForPolicy(BalanceOperationType type) {
+        return type == BalanceOperationType.DEPOSIT
+                || type == BalanceOperationType.WITHDRAWAL
+                || type == BalanceOperationType.TRANSFER_IN
+                || type == BalanceOperationType.TRANSFER_OUT;
+    }
+
+    private BigDecimal computeDelta(BalanceOperationType type, BigDecimal amount) {
+        if (type == BalanceOperationType.DEPOSIT || type == BalanceOperationType.TRANSFER_IN) return amount;
+        if (type == BalanceOperationType.WITHDRAWAL || type == BalanceOperationType.TRANSFER_OUT)
+            return amount.negate();
+        return BigDecimal.ZERO;
+    }
+
     private Mono<Void> validateRequest(AccountRequest request) {
-        if (request.getHolderDocument() == null || request.getHolderDocument().isBlank()) {
-            return Mono.error(new IllegalArgumentException("El documento del titular es obligatorio"));
-        }
-        if (request.getBalance() != null && request.getBalance().compareTo(BigDecimal.ZERO) < 0) {
-            return Mono.error(new IllegalArgumentException("El saldo inicial no puede ser negativo"));
-        }
-        if (request.getAccountType() == null) {
-            return Mono.error(new IllegalArgumentException("El tipo de cuenta es obligatorio"));
-        }
+        if (request.getHolderDocument() == null || request.getHolderDocument().isBlank())
+            return Mono.error(new IllegalArgumentException("holderDocument es obligatorio"));
+        if (!request.getHolderDocument().matches("^\\d{8,11}$"))
+            return Mono.error(new IllegalArgumentException("El documento debe tener entre 8 y 11 dígitos"));
+        if (request.getAccountType() == null)
+            return Mono.error(new IllegalArgumentException("accountType es obligatorio"));
+        if (request.getBalance() != null && request.getBalance().compareTo(MIN_OPENING_BALANCE) < 0)
+            return Mono.error(new IllegalArgumentException("El saldo inicial no puede ser menor a 0"));
 
         switch (request.getAccountType()) {
             case SAVINGS:
-                if (request.getMonthlyMovementLimit() == null) {
-                    return Mono.error(new IllegalArgumentException(
-                            "El límite mensual de movimientos es obligatorio para cuentas de ahorro (SAVINGS)"
-                    ));
-                }
+                if (request.getMonthlyMovementLimit() == null)
+                    return Mono.error(new IllegalArgumentException("monthlyMovementLimit es obligatorio para SAVINGS"));
+                if (request.getMaintenanceFee() != null)
+                    return Mono.error(new IllegalArgumentException("maintenanceFee no aplica a SAVINGS"));
+                if (request.getAllowedDayOfMonth() != null)
+                    return Mono.error(new IllegalArgumentException("allowedDayOfMonth no aplica a SAVINGS"));
                 break;
             case CHECKING:
-                if (request.getMaintenanceFee() == null) {
-                    return Mono.error(new IllegalArgumentException(
-                            "La comisión de mantenimiento es obligatoria para cuentas corrientes (CHECKING)"
-                    ));
-                }
+                if (request.getMaintenanceFee() == null)
+                    return Mono.error(new IllegalArgumentException("maintenanceFee es obligatorio para CHECKING"));
+                if (request.getMonthlyMovementLimit() != null)
+                    return Mono.error(new IllegalArgumentException("monthlyMovementLimit no aplica a CHECKING"));
+                if (request.getAllowedDayOfMonth() != null)
+                    return Mono.error(new IllegalArgumentException("allowedDayOfMonth no aplica a CHECKING"));
                 break;
             case FIXED_TERM:
-                if (request.getAllowedDayOfMonth() == null) {
-                    return Mono.error(new IllegalArgumentException(
-                            "El día permitido de movimiento es obligatorio para cuentas a plazo fijo (FIXED_TERM)"
-                    ));
-                }
+                if (request.getAllowedDayOfMonth() == null)
+                    return Mono.error(new IllegalArgumentException("allowedDayOfMonth es obligatorio para FIXED_TERM"));
+                if (request.getAllowedDayOfMonth() < 1 || request.getAllowedDayOfMonth() > 28)
+                    return Mono.error(new IllegalArgumentException("allowedDayOfMonth debe estar entre 1 y 28"));
+                if (request.getMonthlyMovementLimit() != null)
+                    return Mono.error(new IllegalArgumentException("monthlyMovementLimit no aplica a FIXED_TERM"));
+                if (request.getMaintenanceFee() != null)
+                    return Mono.error(new IllegalArgumentException("maintenanceFee no aplica a FIXED_TERM"));
                 break;
             default:
                 return Mono.error(new IllegalArgumentException("Tipo de cuenta no soportado"));
         }
         return Mono.empty();
     }
-
-    /**
-     * Generador de números de cuenta/interbancario
-     */
-    private String generateAccountNumber(int length) {
-        SecureRandom random = new SecureRandom();
-        return random.ints(length, 0, 10)
-                .mapToObj(String::valueOf)
-                .reduce("", String::concat);
-    }
 }
+

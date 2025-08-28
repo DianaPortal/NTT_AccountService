@@ -2,10 +2,11 @@ openapi: "3.0.1"
 info:
   title: Account Service API
   description: API para gestionar cuentas bancarias.
-  version: 1.0.0
+  version: 2.0.1
 servers:
   - url: http://localhost:8085
     description: Servidor local
+
 paths:
   /api/accounts:
     post:
@@ -19,18 +20,34 @@ paths:
             schema:
               $ref: "#/components/schemas/AccountRequest"
       responses:
-        '200':
+        '201':
           description: Cuenta creada exitosamente
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccountResponse"
         '400':
-          description: Error de validación de negocio
+          description: Error de validación de negocio - Datos inválidos
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        '409':
+          description: Conflicto de unicidad (número de cuenta/interbancario generado ya existe)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '422':
+          description: Regla de negocio no cumplida (p.ej., VIP/PYME sin tarjeta de crédito activa)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '500':
           description: Error interno del servidor
           content:
@@ -40,8 +57,7 @@ paths:
     get:
       summary: Listar todas las cuentas
       operationId: listAccounts
-      tags:
-        - account
+      tags: [account]
       responses:
         '200':
           description: Lista de cuentas bancarias
@@ -60,6 +76,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
   /api/accounts/{id}:
     get:
       summary: Obtener cuenta por ID
@@ -68,8 +85,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: Datos de la cuenta
@@ -96,8 +112,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       requestBody:
         description: Datos actualizados de la cuenta bancaria
         required: true
@@ -137,8 +152,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '204':
           description: Cuenta eliminada exitosamente
@@ -154,110 +168,304 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /api/accounts/{id}/limits:
+    get:
+
+      summary: Obtener límites y comisiones de la cuenta
+      operationId: getAccountLimits
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Política de límites y comisiones
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountLimitsResponse"
+        '404':
+          description: Cuenta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
+  /api/accounts/holder/{document}:
+    get:
+      summary: Listar cuentas por documento del titular
+      operationId: listAccountsByHolderDocument
+      parameters:
+        - name: document
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{8,11}$'
+      responses:
+        '200':
+          description: Lista de cuentas del titular
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponse"
+        '404':
+          description: No se encontraron cuentas para el titular
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/accounts/{id}/balance-ops:
+    post:
+      summary: Aplicar operación de saldo e informar comisión (uso interno por Transactions)
+      description: >
+        Aplica una operación de saldo (depósito, retiro, transfer_in/out).  
+        Lleva el conteo mensual de operaciones **gratis** y aplica **comisión** al excedente.  
+        Usa `operationId` para idempotencia.
+      operationId: applyBalanceOperation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        description: Operación a aplicar (idempotente)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalanceOperationRequest'
+      responses:
+        '200':
+          description: Operación aplicada/evaluada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceOperationResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cuenta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflicto (p.ej., operación duplicada si `operationId` ya fue procesado)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Regla de negocio (saldo insuficiente, día no permitido, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
 components:
   schemas:
     AccountRequest:
       type: object
+      required: [holderDocument, accountType]
       properties:
         id:
           type: string
           description: ID único de la cuenta bancaria
+          readOnly: true
         accountNumber:
           type: string
           description: Número de cuenta autogenerado (11 dígitos)
+          readOnly: true
+          pattern: '^\d{11}$'
         interbankNumber:
           type: string
           description: Número de cuenta interbancario autogenerado (20 dígitos)
+          readOnly: true
+          pattern: '^\d{20}$'
         holderDocument:
           type: string
-          description: Documento del titular de la cuenta
+          description: Documento del titular de la cuenta (8–11 dígitos)
+          pattern: '^\d{8,11}$'
         authorizedSigners:
           type: array
-          description: Lista de documentos de firmantes autorizados
+          description: Documentos de firmantes autorizados (8–11 dígitos)
           items:
             type: string
+            pattern: '^\d{8,11}$'
         accountType:
           type: string
-          description: Tipo de cuenta (SAVINGS, CHECKING, FIXED_TERM)
           enum: [SAVINGS, CHECKING, FIXED_TERM]
+          description: Tipo de cuenta
         balance:
           type: number
-          description: Saldo disponible en la cuenta
+          minimum: 0
+          description: Saldo inicial (>= 0)
         interestRate:
           type: number
+          minimum: 0
           description: Tasa de interés anual (%)
         monthlyMovementLimit:
           type: integer
-          description: Límite mensual de movimientos (solo para cuentas SAVINGS)
+          minimum: 0
+          description: Solo para cuentas SAVINGS
         maintenanceFee:
           type: number
-          description: Comisión de mantenimiento (solo para cuentas CHECKING)
+          minimum: 0
+          description: Solo para cuentas CHECKING
         allowedDayOfMonth:
           type: integer
-          description: Día del mes permitido para movimiento (solo para cuentas FIXED_TERM)
+          minimum: 1
+          maximum: 28
+          description: Solo para cuentas FIXED_TERM
         creationDate:
           type: string
           format: date
-          description: Fecha de creación de la cuenta
+          description: Fecha de creación
+          readOnly: true
         active:
           type: boolean
           description: Estado de la cuenta (true = activa, false = inactiva)
         linkedCard:
           $ref: "#/components/schemas/LinkedCard"
+        freeTransactionsLimit:
+          type: integer
+          description: Número máximo de transacciones sin comisión
+        commissionFee:
+          type: number
+          description: Comisión por transacción excedida
+
     AccountResponse:
       type: object
       properties:
         id:
           type: string
-          description: ID único de la cuenta bancaria
         accountNumber:
           type: string
-          description: Número de cuenta (11 dígitos)
+          pattern: '^\d{11}$'
         interbankNumber:
           type: string
-          description: Número de cuenta interbancario (20 dígitos)
+          pattern: '^\d{20}$'
         holderDocument:
           type: string
-          description: Documento del titular de la cuenta
+          pattern: '^\d{8,11}$'
         authorizedSigners:
           type: array
-          description: Lista de documentos de firmantes autorizados
           items:
             type: string
+            pattern: '^\d{8,11}$'
         accountType:
           type: string
-          description: Tipo de cuenta (SAVINGS, CHECKING, FIXED_TERM)
           enum: [SAVINGS, CHECKING, FIXED_TERM]
         balance:
           type: number
-          description: Saldo disponible en la cuenta
         interestRate:
           type: number
-          description: Tasa de interés anual (%)
         monthlyMovementLimit:
           type: integer
-          description: Límite mensual de movimientos (solo para cuentas SAVINGS)
+          nullable: true
         maintenanceFee:
           type: number
-          description: Comisión de mantenimiento (solo para cuentas CHECKING)
+          nullable: true
         allowedDayOfMonth:
           type: integer
-          description: Día del mes permitido para movimiento (solo para cuentas FIXED_TERM)
+          nullable: true
         creationDate:
           type: string
           format: date
-          description: Fecha de creación de la cuenta
         active:
           type: boolean
-          description: Estado de la cuenta (true = activa, false = inactiva)
         linkedCard:
           $ref: "#/components/schemas/LinkedCard"
+        freeTransactionsLimit:
+          type: integer
+
+        commissionFee:
+          type: number
+
     LinkedCard:
       type: object
       properties:
         id:
           type: string
           description: ID único de la tarjeta vinculada
+
+    AccountLimitsResponse:
+      type: object
+      properties:
+        freeTransactionsLimit:
+          type: integer
+        commissionFee:
+          type: number
+        usedTransactionsThisMonth:
+          type: integer
+
+    AccountMovement:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        date:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum: [deposit, withdrawal, transfer, commission]
+        amount:
+          type: number
+        commissionApplied:
+          type: number
+
+    BalanceOperationType:
+      type: string
+      enum: [deposit, withdrawal, transfer_in, transfer_out, commission]
+
+    BalanceOperationRequest:
+      type: object
+      required: [ operationId, type, amount ]
+      properties:
+        operationId:
+          type: string
+          description: UUID para idempotencia
+        type:
+          $ref: '#/components/schemas/BalanceOperationType'
+        amount:
+          type: number
+          minimum: 0.01
+        metadata:
+          type: object
+          additionalProperties: true
+
+    BalanceOperationResponse:
+      type: object
+      properties:
+        applied:
+          type: boolean
+        newBalance:
+          type: number
+        commissionApplied:
+          type: number
+          description: Comisión calculada (si excede operaciones gratis)
+        message:
+          type: string
+
     ErrorResponse:
       type: object
       properties:

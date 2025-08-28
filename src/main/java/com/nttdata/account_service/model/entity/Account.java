@@ -3,10 +3,12 @@ package com.nttdata.account_service.model.entity;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -15,9 +17,10 @@ import java.util.List;
 public class Account {
     @Id
     private String id;
-
-    private String accountNumber;
-    private String interbankNumber;
+    @Indexed(unique = true)
+    private String accountNumber;  // 11 dígitos
+    @Indexed(unique = true)
+    private String interbankNumber;  // 20 dígitos
     // Titulares / firmantes
     private String holderDocument;
     private List<String> authorizedSigners;
@@ -35,6 +38,14 @@ public class Account {
     private LocalDate creationDate;
     // Tarjeta vinculada
     private LinkedCard linkedCard;
+    // Nuevos campos entregable II
+    private Integer freeTransactionsLimit;// operaciones sin comisión
+    private BigDecimal commissionFee;
+    /// / comisión por transacción extra
 
+    private ArrayList<String> opIds;
+    private OpsCounter opsCounter;
 
 }
+
+

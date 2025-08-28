@@ -1,12 +1,8 @@
 package com.nttdata.account_service.service;
 
-import com.nttdata.account_service.model.AccountRequest;
-import com.nttdata.account_service.model.AccountResponse;
-import org.springframework.http.ResponseEntity;
+import com.nttdata.account_service.model.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 public interface AccountService {
     Flux<AccountResponse> listAccounts();
@@ -18,4 +14,11 @@ public interface AccountService {
     Mono<AccountResponse> updateAccount(String id, AccountRequest request);
 
     Mono<Void> deleteAccount(String id);
+
+    Mono<AccountLimitsResponse> getAccountLimits(String id);
+
+    Mono<BalanceOperationResponse> applyBalanceOperation(String accountId, BalanceOperationRequest request);
+
+    Flux<AccountResponse> getAccountsByHolderDocument(String holderDocument);
+
 }
