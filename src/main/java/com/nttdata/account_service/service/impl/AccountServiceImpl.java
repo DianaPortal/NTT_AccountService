@@ -4,6 +4,10 @@ import com.nttdata.account_service.config.BusinessException;
 import com.nttdata.account_service.integration.credits.CreditsClient;
 import com.nttdata.account_service.integration.customers.CustomersClient;
 import com.nttdata.account_service.integration.customers.EligibilityResponse;
+import com.nttdata.account_service.integration.transactions.TransactionsClient;
+import com.nttdata.account_service.integration.transactions.dtos.TransactionCreateDTO;
+import com.nttdata.account_service.integration.transactions.dtos.TransactionPersonDTO;
+import com.nttdata.account_service.integration.transactions.dtos.TransactionProductDTO;
 import com.nttdata.account_service.model.*;
 import com.nttdata.account_service.model.entity.Account;
 import com.nttdata.account_service.model.entity.OpsCounter;
@@ -38,6 +42,7 @@ public class AccountServiceImpl implements AccountService {
     // Integraciones y servicios de dominio
     private final CustomersClient customersClient;
     private final CreditsClient creditsClient;
+    private final TransactionsClient transactionsClient;
     private final AccountRulesService accountRules;
     private final AccountPolicyService policyService;
 
@@ -229,10 +234,27 @@ public class AccountServiceImpl implements AccountService {
                     acc.getOpIds().add(request.getOperationId());
                     if (acc.getOpIds().size() > 200) acc.getOpIds().remove(0);
 
+
+
                     return accountRepository.save(acc)
-                            .map(saved -> new BalanceOperationResponse()
-                                    .applied(true).newBalance(saved.getBalance())
-                                    .commissionApplied(commissionApplied).message("OK"));
+                            .map(saved ->  {
+                                transactionsClient.postTransaction(
+                                        TransactionCreateDTO.builder()
+                                                .amount(request.getAmount())
+                                                .type(TransactionCreateDTO.GET_OPERATIONAL_TYPES.get(request.getType().getValue()))
+                                                .sender(TransactionProductDTO.builder().id(saved.getId())
+                                                        .type(TransactionProductDTO.GET_PRODUCT_TYPES.get(saved.getAccountType()))
+                                                        .number(saved.getAccountNumber()).balance(saved.getBalance()).build())
+                                                .holder(TransactionPersonDTO.builder().document(saved.getHolderDocument()).build())
+                                                .build()
+                                ).doOnSuccess(transactionResponseDTO ->
+                                        log.info("Transaction with id {} was registered",transactionResponseDTO.getId()))
+                                        .subscribe();
+
+                                return new BalanceOperationResponse()
+                                        .applied(true).newBalance(saved.getBalance())
+                                        .commissionApplied(commissionApplied).message("OK");
+                            });
                 });
     }
 
