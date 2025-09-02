@@ -86,7 +86,7 @@ public class AccountServiceImplTest {
     void createAccount_savingsVipSinTarjeta_debeFallar422() {
         AccountRequest r = req("12345678", AccountRequest.AccountTypeEnum.SAVINGS);
 
-        when(customersClient.getEligibilityByDocument("12345678"))
+        when(customersClient.getEligibilityByDocument("DNI","12345678"))
                 .thenReturn(Mono.just(elig("PERSONAL", "VIP", "C1")));
         when(accountRules.validateLegacyRules("12345678", AccountRequest.AccountTypeEnum.SAVINGS, "PERSONAL"))
                 .thenReturn(Mono.empty());
@@ -104,7 +104,7 @@ public class AccountServiceImplTest {
     void createAccount_ok_debePersistirConNumerosYDefaults() {
         AccountRequest r = req("12345678", AccountRequest.AccountTypeEnum.SAVINGS);
 
-        when(customersClient.getEligibilityByDocument("12345678"))
+        when(customersClient.getEligibilityByDocument("DNI","12345678"))
                 .thenReturn(Mono.just(elig("PERSONAL", "STANDARD", "C1")));
         when(accountRules.validateLegacyRules("12345678", AccountRequest.AccountTypeEnum.SAVINGS, "PERSONAL"))
                 .thenReturn(Mono.empty());

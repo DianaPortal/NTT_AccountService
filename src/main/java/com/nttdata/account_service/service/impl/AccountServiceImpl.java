@@ -59,15 +59,27 @@ public class AccountServiceImpl implements AccountService {
                 .map(AccountMapper::toResponse);
     }
 
+
     @Override
     public Mono<AccountResponse> createAccount(AccountRequest request) {
+        // Validación inicial para evitar NullPointerException
+        if (request.getHolderDocumentType() == null) {
+            return Mono.error(new BusinessException("holderDocumentType es obligatorio"));
+        }
+
         return validateRequest(request)
-                .then(customersClient.getEligibilityByDocument(request.getHolderDocument())
-                        .switchIfEmpty(Mono.error(new BusinessException("No existe cliente activo para el documento."))))
+                .then(
+                        customersClient.getEligibilityByDocument(
+                                        request.getHolderDocumentType().getValue(),  // o .name()
+                                        request.getHolderDocument()
+                                )
+                                .switchIfEmpty(Mono.error(new BusinessException("No existe cliente activo para el documento.")))
+                )
                 .flatMap(elig -> validateAllRules(request, elig)
                         .then(Mono.defer(() -> persistNewAccount(request, elig))))
                 .map(AccountMapper::toResponse);
     }
+
 
     private Mono<Void> validateAllRules(AccountRequest req, EligibilityResponse elig) {
         Mono<Void> legacy = accountRules.validateLegacyRules(req.getHolderDocument(), req.getAccountType(), elig.getType());

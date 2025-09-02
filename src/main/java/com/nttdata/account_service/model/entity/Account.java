@@ -23,6 +23,7 @@ public class Account {
     private String interbankNumber;  // 20 dígitos
     // Titulares / firmantes
     private String holderDocument;
+    private String holderDocumentType;
     private List<String> authorizedSigners;
     // Tipo y estado
     private String accountType;  // SAVINGS, CHECKING, FIXED_TERM

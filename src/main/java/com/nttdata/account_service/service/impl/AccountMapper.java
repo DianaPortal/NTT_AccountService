@@ -33,7 +33,17 @@ public class AccountMapper {
         dto.setInterbankNumber(account.getInterbankNumber());
 
         dto.setHolderDocument(safeTrim(account.getHolderDocument()));
-
+        dto.setHolderDocumentType(
+                Optional.ofNullable(account.getHolderDocumentType())
+                        .map(String::trim)
+                        .flatMap(t -> {
+                            try {
+                                return Optional.of(AccountResponse.HolderDocumentTypeEnum.valueOf(t));
+                            } catch (IllegalArgumentException ex) {
+                                return Optional.empty();
+                            }
+                        }).orElse(null)
+        );
         // Firmantes
         dto.setAuthorizedSigners(cleanDocs(account.getAuthorizedSigners()));
 
@@ -69,6 +79,10 @@ public class AccountMapper {
 
 
         acc.setHolderDocument(safeTrim(request.getHolderDocument()));
+        acc.setHolderDocumentType(
+                Optional.ofNullable(request.getHolderDocumentType())
+                        .map(Enum::name)
+                        .orElse(null));
         acc.setAuthorizedSigners(cleanDocs(request.getAuthorizedSigners()));
 
         // Guardamos como String en entity (SAVINGS|CHECKING|FIXED_TERM)
@@ -100,7 +114,12 @@ public class AccountMapper {
 
         // Campos simples
         applyIfPresent(safeTrim(request.getHolderDocument()), target::setHolderDocument);
-
+        applyIfPresent(
+                Optional.ofNullable(request.getHolderDocumentType())
+                        .map(Enum::name)
+                        .orElse(null),
+                target::setHolderDocumentType
+        );
         // Enum -> String
         applyIfPresent(ofNullable(request.getAccountType()).map(Enum::name).orElse(null), target::setAccountType);
 
@@ -161,7 +180,23 @@ public class AccountMapper {
                 .orElse(null);
     }
 
+    private static AccountResponse.HolderDocumentTypeEnum toResponseHolderDocumentTypeEnum(String type) {
+        return Optional.ofNullable(type)
+                .map(String::trim)
+                .flatMap(t -> {
+                    try {
+                        return Optional.of(AccountResponse.HolderDocumentTypeEnum.valueOf(t));
+                    } catch (IllegalArgumentException ex) {
+                        return Optional.empty();
+                    }
+                })
+                .orElse(null);
+    }
+
+
     private static <T> JsonNullable<T> jn(T value) {
         return value == null ? JsonNullable.undefined() : JsonNullable.of(value);
     }
+
+
 }

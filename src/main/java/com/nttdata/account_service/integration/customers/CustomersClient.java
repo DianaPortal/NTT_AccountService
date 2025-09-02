@@ -14,13 +14,16 @@ public class CustomersClient {
     @Value("${services.customers.url}")
     private String baseUrl; // http://localhost:8086/api/v1
 
-    public Mono<EligibilityResponse> getEligibilityByDocument(String documentNumber) {
+    public Mono<EligibilityResponse> getEligibilityByDocument(String documentType, String documentNumber) {
         return webClientBuilder.baseUrl(baseUrl).build()
                 .get()
-                .uri(u -> u.path("/customers/eligibility")
+                .uri(uriBuilder -> uriBuilder
+                        .path("/customers/eligibility")
+                        .queryParam("documentType", documentType)
                         .queryParam("documentNumber", documentNumber)
                         .build())
                 .retrieve()
                 .bodyToMono(EligibilityResponse.class);
     }
+
 }

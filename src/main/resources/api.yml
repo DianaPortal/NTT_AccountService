@@ -284,7 +284,7 @@ components:
   schemas:
     AccountRequest:
       type: object
-      required: [holderDocument, accountType]
+      required: [holderDocument,holderDocumentType, accountType]
       properties:
         id:
           type: string
@@ -304,6 +304,10 @@ components:
           type: string
           description: Documento del titular de la cuenta (8–11 dígitos)
           pattern: '^\d{8,11}$'
+        holderDocumentType:
+          type: string
+          description: Tipo de documento del titular
+          enum: [ DNI, PASSPORT, RUC, CE ]
         authorizedSigners:
           type: array
           description: Documentos de firmantes autorizados (8–11 dígitos)
@@ -366,6 +370,10 @@ components:
         holderDocument:
           type: string
           pattern: '^\d{8,11}$'
+        holderDocumentType:
+          type: string
+          description: Tipo de documento del titular
+          enum: [ DNI, PASSPORT, RUC, CE ]
         authorizedSigners:
           type: array
           items:
