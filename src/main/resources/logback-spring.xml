@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="APP_NAME" value="account_service"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="reactor.netty" level="WARN"/>
+    <logger name="com.nttdata.accountservice" level="INFO"/>
+    <logger name="org.springframework.web.reactive.function.client.WebClient" level="DEBUG"/>
+</configuration>

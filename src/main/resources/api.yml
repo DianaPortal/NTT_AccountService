@@ -57,7 +57,7 @@ paths:
     get:
       summary: Listar todas las cuentas
       operationId: listAccounts
-      tags: [account]
+      tags: [ account ]
       responses:
         '200':
           description: Lista de cuentas bancarias
@@ -284,7 +284,7 @@ components:
   schemas:
     AccountRequest:
       type: object
-      required: [holderDocument,holderDocumentType, accountType]
+      required: [ holderDocument,holderDocumentType, accountType ]
       properties:
         id:
           type: string
@@ -316,7 +316,7 @@ components:
             pattern: '^\d{8,11}$'
         accountType:
           type: string
-          enum: [SAVINGS, CHECKING, FIXED_TERM]
+          enum: [ SAVINGS, CHECKING, FIXED_TERM ]
           description: Tipo de cuenta
         balance:
           type: number
@@ -381,7 +381,7 @@ components:
             pattern: '^\d{8,11}$'
         accountType:
           type: string
-          enum: [SAVINGS, CHECKING, FIXED_TERM]
+          enum: [ SAVINGS, CHECKING, FIXED_TERM ]
         balance:
           type: number
         interestRate:
@@ -435,7 +435,7 @@ components:
           format: date-time
         type:
           type: string
-          enum: [deposit, withdrawal, transfer, commission]
+          enum: [ deposit, withdrawal, transfer, commission ]
         amount:
           type: number
         commissionApplied:
@@ -443,7 +443,7 @@ components:
 
     BalanceOperationType:
       type: string
-      enum: [deposit, withdrawal, transfer_in, transfer_out, commission]
+      enum: [ deposit, withdrawal, transfer_in, transfer_out, commission ]
 
     BalanceOperationRequest:
       type: object
