@@ -175,31 +175,40 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.8</version>
                 <executions>
                     <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
+                        <goals><goal>prepare-agent</goal></goals>
                     </execution>
+
+                    <!-- GENERAR jacoco.xml (para Sonar y tu site) -->
                     <execution>
-                        <id>check</id>
+                        <id>report</id>
                         <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
+                        <goals><goal>report</goal></goals>
                         <configuration>
                             <excludes>
 
-                                <exclude>**/com/nttdata/accountservice/api/ApiUtil.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/api/*Api.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/api/*ApiController.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/api/*ApiDelegate.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/model/**</exclude>
-                                <exclude>**/com/nttdata/accountservice/AccountServiceApplication.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/config/**</exclude>
+                                <exclude>**/com/nttdata/accountservice/api/*Api*.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/model/*</exclude>
+                                <exclude>**/com/nttdata/accountservice/config/JacksonConfig.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/config/WebClientConfig.class</exclude>
 
+                                <exclude>com/nttdata/accountservice/AccountServiceApplication.class</exclude>
                             </excludes>
+                        </configuration>
+                    </execution>
 
+                    <execution>
+                        <id>check</id>
+                        <goals><goal>check</goal></goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/com/nttdata/accountservice/api/*Api*.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/model/*</exclude>
+                                <exclude>**/com/nttdata/accountservice/config/JacksonConfig.class</exclude>
+                                <exclude>com/nttdata/accountservice/AccountServiceApplication.class</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
@@ -207,18 +216,17 @@
                                         <limit>
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.60</minimum> <!--0.80-->
+                                            <minimum>0.80</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.30</minimum> <!--0.60-->
+                                            <minimum>0.60</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
                             </rules>
                         </configuration>
-
                     </execution>
                 </executions>
             </plugin>

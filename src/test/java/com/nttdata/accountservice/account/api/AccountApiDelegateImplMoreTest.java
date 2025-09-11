@@ -7,10 +7,12 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.*;
 import org.mockito.*;
 import org.mockito.junit.jupiter.*;
+import org.springframework.http.*;
 import reactor.core.publisher.*;
 import reactor.test.*;
 
 import java.math.*;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -114,5 +116,49 @@ class AccountApiDelegateImplMoreTest {
           assertTrue(re.getBody().getApplied());
         })
         .verifyComplete();
+  }
+
+  @Test
+  void registerAccount_creaYDevuelve201ConLocation() {
+    AccountRequest rq = new AccountRequest().holderDocument("123").holderDocumentType(AccountRequest.HolderDocumentTypeEnum.DNI);
+    AccountResponse rs = new AccountResponse().id("A1");
+    when(service.createAccount(any(AccountRequest.class))).thenReturn(Mono.just(rs));
+
+    StepVerifier.create(delegate.registerAccount(Mono.just(rq), null))
+        .assertNext(resp -> {
+          assertEquals(201, resp.getStatusCodeValue());
+          assertTrue(Objects.requireNonNull(resp.getHeaders().getLocation()).toString().endsWith("/api/accounts/A1"));
+          assertEquals("A1", Objects.requireNonNull(resp.getBody()).getId());
+        })
+        .verifyComplete();
+  }
+
+  @Test
+  void listAccountsByHolderDocument_ok() {
+    var rs = new AccountResponse().id("A1");
+    when(service.getAccountsByHolderDocument("123"))
+        .thenReturn(reactor.core.publisher.Flux.just(rs));
+
+    StepVerifier.create(delegate.listAccountsByHolderDocument("123", null))
+        .assertNext((ResponseEntity<reactor.core.publisher.Flux<AccountResponse>> re) ->
+            StepVerifier.create(Objects.requireNonNull(re.getBody()))
+                .expectNextMatches(a -> "A1".equals(a.getId()))
+                .verifyComplete()
+        )
+        .verifyComplete();
+  }
+
+  @Test
+  void listAccountsByHolderDocument_vacio_devuelve404() {
+    when(service.getAccountsByHolderDocument("999")).thenReturn(Flux.empty());
+
+    StepVerifier.create(delegate.listAccountsByHolderDocument("999", null))
+        .assertNext((ResponseEntity<Flux<AccountResponse>> re) -> {
+          assertEquals(404, re.getStatusCodeValue());
+          StepVerifier.create(Objects.requireNonNull(re.getBody())).verifyComplete();
+        })
+        .verifyComplete();
+
+    verify(service).getAccountsByHolderDocument("999");
   }
 }

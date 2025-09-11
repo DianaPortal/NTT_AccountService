@@ -1,4 +1,4 @@
-# Customers Service - NTT Data Bootcamp (Avance 1)
+# Account Service - NTT Data Bootcamp (Avance 1)
 
 Microservicio bancario desarrollado en el Bootcamp de Microservicios.
 Este repositorio corresponde al Avance 1 del proyecto, donde se implementa el microservicio de cuentas.
