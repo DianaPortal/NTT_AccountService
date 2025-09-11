@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
-public class AccountApiDelegateImplMoreTest {
+class AccountApiDelegateImplMoreTest {
   @Mock
   AccountService service;
   AccountApiDelegateImpl delegate;

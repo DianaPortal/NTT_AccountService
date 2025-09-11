@@ -8,7 +8,7 @@ import org.springframework.test.util.*;
 import org.springframework.web.reactive.function.client.*;
 import reactor.test.*;
 
-public class CustomersClientErrorTest {
+class CustomersClientErrorTest {
 
   TimeLimiterRegistry relaxedRegistry = TimeLimiterRegistry.of(
       TimeLimiterConfig.custom()

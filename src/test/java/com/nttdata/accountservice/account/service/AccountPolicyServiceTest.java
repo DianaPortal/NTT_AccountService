@@ -10,7 +10,7 @@ import java.math.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AccountPolicyServiceTest {
+class AccountPolicyServiceTest {
   AccountPolicyService service;
 
   @BeforeEach

@@ -10,7 +10,7 @@ import reactor.test.*;
 
 import static org.junit.Assert.*;
 
-public class CustomersClientTest {
+class CustomersClientTest {
   @Test
   void getEligibilityByDocument_enviaTipoYNumeroComoQueryParams() throws Exception {
     MockWebServer server = new MockWebServer();

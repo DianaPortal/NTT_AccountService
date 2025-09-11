@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  */
 @ExtendWith(MockitoExtension.class)
-public class AccountServiceImplValidationTest {
+class AccountServiceImplValidationTest {
   @Mock
   AccountRepository repository;
   @Mock
@@ -141,6 +141,7 @@ public class AccountServiceImplValidationTest {
         })
         .verify();
   }
+
 
   @Test
   void savings_sin_monthlyMovementLimit_debe_fallar() {
