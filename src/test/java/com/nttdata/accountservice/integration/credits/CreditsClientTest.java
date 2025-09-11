@@ -10,7 +10,7 @@ import reactor.test.*;
 
 import static org.junit.Assert.*;
 
-public class CreditsClientTest {
+class CreditsClientTest {
   @Test
   void hasActiveCreditCard_trueCuandoExisteTarjetaActiva() throws Exception {
     MockWebServer server = new MockWebServer();

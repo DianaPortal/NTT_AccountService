@@ -12,7 +12,7 @@ import reactor.test.*;
 import java.time.*;
 import java.util.concurrent.*;
 
-public class CustomersClientResilienceTest {
+class CustomersClientResilienceTest {
   @Test
   void timeoutDe2s_dispara504() throws Exception {
     MockWebServer server = new MockWebServer();

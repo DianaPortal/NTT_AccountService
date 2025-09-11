@@ -107,8 +107,9 @@ public class AccountMapper {
     return acc;
   }
 
-
+  // Actualiza solo los campos no nulos del request
   public static void mergeIntoEntity(Account target, AccountRequest request) {
+
     if (target == null || request == null) return;
 
     // Campos simples
@@ -162,7 +163,7 @@ public class AccountMapper {
         .stream()
         .filter(Objects::nonNull)
         .map(String::trim)
-        .map(s -> s.replaceAll("[^0-9]", ""))     // solo dígitos
+        .map(s -> s.replaceAll("\\D", "")) // solo dígitos -- [^0-9]
         .filter(s -> !s.isEmpty())
         .filter(s -> DOC_PATTERN.matcher(s).matches())
         .distinct()
@@ -182,7 +183,7 @@ public class AccountMapper {
         .orElse(null);
   }
 
-  private static AccountResponse.HolderDocumentTypeEnum
+ /* private static AccountResponse.HolderDocumentTypeEnum
   toResponseHolderDocumentTypeEnum(String type) {
     return Optional.ofNullable(type)
         .map(String::trim)
@@ -195,7 +196,7 @@ public class AccountMapper {
         })
         .orElse(null);
   }
-
+*/
 
   private static <T> JsonNullable<T> jn(T value) {
     return value == null ? JsonNullable.undefined() : JsonNullable.of(value);

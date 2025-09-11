@@ -5,7 +5,7 @@ import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AccountNumberGeneratorExtraTest {
+class AccountNumberGeneratorExtraTest {
   @Test
   void numeric_longitudesYFormatoOk() {
     String n11 = AccountNumberGenerator.numeric(11);

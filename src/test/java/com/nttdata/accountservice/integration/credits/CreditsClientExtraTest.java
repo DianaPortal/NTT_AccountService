@@ -10,7 +10,7 @@ import reactor.test.*;
 
 import java.time.*;
 
-public class CreditsClientExtraTest {
+class CreditsClientExtraTest {
 
 
   TimeLimiterRegistry relaxedRegistry = TimeLimiterRegistry.of(

@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AccountServiceImplListTest {
+class AccountServiceImplListTest {
   @Mock
   AccountRepository repository;
   @Mock

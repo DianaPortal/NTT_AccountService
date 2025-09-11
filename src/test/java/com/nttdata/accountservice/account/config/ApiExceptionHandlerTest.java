@@ -9,7 +9,7 @@ import reactor.test.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ApiExceptionHandlerTest {
+class ApiExceptionHandlerTest {
   @Test
   void duplicateKey_devuelve409() {
     ApiExceptionHandler h = new ApiExceptionHandler();

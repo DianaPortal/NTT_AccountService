@@ -15,7 +15,7 @@ import reactor.test.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AccountApiDelegateImplErrorsTest {
+class AccountApiDelegateImplErrorsTest {
 
   @Mock
   AccountService service;

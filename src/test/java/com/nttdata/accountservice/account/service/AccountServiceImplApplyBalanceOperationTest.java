@@ -24,7 +24,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AccountServiceImplApplyBalanceOperationTest {
+class AccountServiceImplApplyBalanceOperationTest {
   @Mock
   AccountRepository repository;
   @Mock
