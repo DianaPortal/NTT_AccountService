@@ -22,48 +22,46 @@ class CreditsClientExtraTest {
 
   @Test
   void hasActiveCreditCard_listaVacia_devuelveFalse() throws Exception {
-    MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse()
-        .setResponseCode(200)
-        .addHeader("Content-Type", "application/json")
-        .setBody("[]"));
-    String base = server.url("/api/v1").toString();
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(new MockResponse()
+          .setResponseCode(200)
+          .addHeader("Content-Type", "application/json")
+          .setBody("[]"));
+      String base = server.url("/api/v1").toString();
 
+      ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      CreditsClient client = new CreditsClient(
+          WebClient.builder(),
+          CircuitBreakerRegistry.ofDefaults(),
+          relaxedRegistry,
+          noAuth
+      );
+      ReflectionTestUtils.setField(client, "baseUrl", base);
 
-    CreditsClient client = new CreditsClient(
-        WebClient.builder(),
-        CircuitBreakerRegistry.ofDefaults(),
-        relaxedRegistry
-
-    );
-    ReflectionTestUtils.setField(client, "baseUrl", base);
-
-    StepVerifier.create(client.hasActiveCreditCard("C1"))
-        .expectNext(false)
-        .verifyComplete();
-
-    server.shutdown();
+      StepVerifier.create(client.hasActiveCreditCard("C1"))
+          .expectNext(false)
+          .verifyComplete();
+    }
   }
 
   @Test
   void hasActiveCreditCard_500_lanzaError() throws Exception {
-    MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(500).setBody("error"));
-    String base = server.url("/api/v1").toString();
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(new MockResponse().setResponseCode(500).setBody("error"));
+      String base = server.url("/api/v1").toString();
 
+      ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      CreditsClient client = new CreditsClient(
+          WebClient.builder(),
+          CircuitBreakerRegistry.ofDefaults(),
+          relaxedRegistry,
+          noAuth
+      );
+      ReflectionTestUtils.setField(client, "baseUrl", base);
 
-    CreditsClient client = new CreditsClient(
-        WebClient.builder(),
-        CircuitBreakerRegistry.ofDefaults(),
-        relaxedRegistry
-
-    );
-    ReflectionTestUtils.setField(client, "baseUrl", base);
-
-    StepVerifier.create(client.hasActiveCreditCard("C1"))
-        .expectError(WebClientResponseException.class)
-        .verify();
-
-    server.shutdown();
+      StepVerifier.create(client.hasActiveCreditCard("C1"))
+          .expectError(WebClientResponseException.class)
+          .verify();
+    }
   }
 }

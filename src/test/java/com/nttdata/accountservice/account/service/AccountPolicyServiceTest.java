@@ -1,7 +1,6 @@
 package com.nttdata.accountservice.account.service;
 
 import com.nttdata.accountservice.model.*;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.service.policy.*;
 import org.junit.jupiter.api.*;
 import org.springframework.test.util.*;
@@ -27,7 +26,7 @@ class AccountPolicyServiceTest {
 
   @Test
   void applyDefaults_savings() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     service.applyDefaults(acc, AccountRequest.AccountTypeEnum.SAVINGS);
     assertEquals(5, acc.getFreeTransactionsLimit());
     assertEquals(0, new BigDecimal("1.50").compareTo(acc.getCommissionFee()));
@@ -35,7 +34,7 @@ class AccountPolicyServiceTest {
 
   @Test
   void applyDefaults_checking() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     service.applyDefaults(acc, AccountRequest.AccountTypeEnum.CHECKING);
     assertEquals(10, acc.getFreeTransactionsLimit());
     assertEquals(0, new BigDecimal("0.90").compareTo(acc.getCommissionFee()));
@@ -43,7 +42,7 @@ class AccountPolicyServiceTest {
 
   @Test
   void applyDefaults_fixedTerm() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     service.applyDefaults(acc, AccountRequest.AccountTypeEnum.FIXED_TERM);
     assertEquals(0, acc.getFreeTransactionsLimit());
     assertEquals(0, new BigDecimal("0.00").compareTo(acc.getCommissionFee()));
@@ -51,7 +50,7 @@ class AccountPolicyServiceTest {
 
   @Test
   void applyDefaults_noOverrideWhenAlreadySet() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     acc.setFreeTransactionsLimit(99);
     acc.setCommissionFee(new BigDecimal("7.77"));
     service.applyDefaults(acc, AccountRequest.AccountTypeEnum.SAVINGS);

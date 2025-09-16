@@ -12,6 +12,9 @@ import com.nttdata.accountservice.service.rules.*;
 import com.nttdata.accountservice.util.*;
 import lombok.*;
 import lombok.extern.slf4j.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.*;
 import org.springframework.http.*;
 import org.springframework.stereotype.*;
 import org.springframework.web.server.*;
@@ -38,11 +41,9 @@ public class AccountServiceImpl implements AccountService {
   private final AccountPolicyService policyService;
 
 
-  @org.springframework.beans.factory.annotation
-      .Value("${benefit.savings.vip.requireCreditCard:true}")
+  @Value("${benefit.savings.vip.requireCreditCard:true}")
   private boolean requireCcForVip;
-  @org.springframework.beans.factory.annotation
-      .Value("${benefit.checking.pyme.requireCreditCard:true}")
+  @Value("${benefit.checking.pyme.requireCreditCard:true}")
   private boolean requireCcForPyme;
 
   @Override
@@ -326,7 +327,7 @@ public class AccountServiceImpl implements AccountService {
   private Mono<Account> trySaveWithRetry(Account acc, int remaining) {
     return accountRepository.save(acc)
         .onErrorResume(ex -> {
-          if (ex instanceof org.springframework.dao.DuplicateKeyException && remaining > 0) {
+          if (ex instanceof DuplicateKeyException && remaining > 0) {
             acc.setAccountNumber(AccountNumberGenerator.numeric(11));
             acc.setInterbankNumber(AccountNumberGenerator.numeric(20));
             return trySaveWithRetry(acc, remaining - 1);

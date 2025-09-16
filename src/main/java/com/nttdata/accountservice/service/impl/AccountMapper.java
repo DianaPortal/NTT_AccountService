@@ -1,8 +1,6 @@
 package com.nttdata.accountservice.service.impl;
 
 import com.nttdata.accountservice.model.*;
-import com.nttdata.accountservice.model.entity.LinkedCard;
-import com.nttdata.accountservice.model.entity.*;
 import org.openapitools.jackson.nullable.*;
 
 import java.math.*;
@@ -22,7 +20,7 @@ public class AccountMapper {
   private AccountMapper() {
   }
 
-  public static AccountResponse toResponse(Account account) {
+  public static AccountResponse toResponse(com.nttdata.accountservice.model.entity.Account account) {
     if (account == null) return null;
 
     AccountResponse dto = new AccountResponse();
@@ -71,10 +69,10 @@ public class AccountMapper {
   }
 
 
-  public static Account toEntity(AccountRequest request) {
+  public static com.nttdata.accountservice.model.entity.Account toEntity(AccountRequest request) {
     if (request == null) return null;
 
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
 
 
     acc.setHolderDocument(safeTrim(request.getHolderDocument()));
@@ -108,7 +106,7 @@ public class AccountMapper {
   }
 
   // Actualiza solo los campos no nulos del request
-  public static void mergeIntoEntity(Account target, AccountRequest request) {
+  public static void mergeIntoEntity(com.nttdata.accountservice.model.entity.Account target, AccountRequest request) {
 
     if (target == null || request == null) return;
 

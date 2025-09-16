@@ -18,21 +18,22 @@ class CustomersClientErrorTest {
 
   @Test
   void getEligibilityByDocument_500_lanzaError() throws Exception {
-    MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(500).setBody("error"));
-    String base = server.url("/api/v1").toString();
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(new MockResponse().setResponseCode(500).setBody("error"));
+      String base = server.url("/api/v1").toString();
 
-    CustomersClient client = new CustomersClient(
-        WebClient.builder(),
-        CircuitBreakerRegistry.ofDefaults(),
-        relaxedRegistry
-    );
-    ReflectionTestUtils.setField(client, "baseUrl", base);
+      ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      CustomersClient client = new CustomersClient(
+          WebClient.builder(),
+          CircuitBreakerRegistry.ofDefaults(),
+          relaxedRegistry,
+          noAuth
+      );
+      ReflectionTestUtils.setField(client, "baseUrl", base);
 
-    StepVerifier.create(client.getEligibilityByDocument("DNI", "12345678"))
-        .expectError(WebClientResponseException.class)
-        .verify();
-
-    server.shutdown();
+      StepVerifier.create(client.getEligibilityByDocument("DNI", "12345678"))
+          .expectError(WebClientResponseException.class)
+          .verify();
+    }
   }
 }
