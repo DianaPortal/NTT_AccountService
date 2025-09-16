@@ -4,7 +4,6 @@ import com.nttdata.accountservice.config.*;
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
 import com.nttdata.accountservice.model.*;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.repository.*;
 import com.nttdata.accountservice.service.impl.*;
 import com.nttdata.accountservice.service.policy.*;
@@ -58,7 +57,7 @@ class AccountServiceImplCheckingValidationTest {
 
     when(customers.getEligibilityByDocument("DNI", "12345678")).thenReturn(Mono.just(elig));
     when(rules.validateLegacyRules(anyString(), any(), anyString())).thenReturn(Mono.empty());
-    when(repository.save(any(Account.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+    when(repository.save(any(com.nttdata.accountservice.model.entity.Account.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
     var req = new AccountRequest()
         .holderDocumentType(DNI)

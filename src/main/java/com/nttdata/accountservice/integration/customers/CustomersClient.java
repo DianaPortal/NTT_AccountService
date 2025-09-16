@@ -5,6 +5,7 @@ import io.github.resilience4j.reactor.circuitbreaker.operator.*;
 import io.github.resilience4j.reactor.timelimiter.*;
 import io.github.resilience4j.timelimiter.*;
 import lombok.*;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.*;
@@ -21,6 +22,7 @@ public class CustomersClient {
   private final WebClient.Builder webClientBuilder;
   private final CircuitBreakerRegistry circuitBreakerRegistry;
   private final TimeLimiterRegistry timeLimiterRegistry;
+  private final ExchangeFilterFunction bearerRelayFilter;
 
   @Value("${services.customers.url}")
   private String baseUrl; // http://localhost:8086/api/v1
@@ -29,7 +31,9 @@ public class CustomersClient {
       String documentType, String documentNumber) {
     CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker("customers");
 
-    return webClientBuilder.baseUrl(baseUrl).build()
+    return webClientBuilder.baseUrl(baseUrl)
+        .filter(bearerRelayFilter)
+        .build()
         .get()
         .uri(uriBuilder -> uriBuilder
             .path("/customers/eligibility")

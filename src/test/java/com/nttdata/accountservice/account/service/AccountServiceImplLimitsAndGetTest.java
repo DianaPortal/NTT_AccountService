@@ -2,7 +2,6 @@ package com.nttdata.accountservice.account.service;
 
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.repository.*;
 import com.nttdata.accountservice.service.impl.*;
 import com.nttdata.accountservice.service.policy.*;
@@ -43,11 +42,11 @@ class AccountServiceImplLimitsAndGetTest {
 
   @Test
   void getAccountLimits_ok() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     acc.setId("A1");
     acc.setFreeTransactionsLimit(3);
     acc.setCommissionFee(new BigDecimal("1.25"));
-    OpsCounter oc = new OpsCounter();
+    com.nttdata.accountservice.model.entity.OpsCounter oc = new com.nttdata.accountservice.model.entity.OpsCounter();
     oc.setYearMonth(YearMonth.now().toString());
     oc.setCount(1);
     acc.setOpsCounter(oc);

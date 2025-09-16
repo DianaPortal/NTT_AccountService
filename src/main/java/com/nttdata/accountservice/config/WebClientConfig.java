@@ -1,17 +1,23 @@
 package com.nttdata.accountservice.config;
 
 
+import com.nttdata.accountservice.security.*;
 import io.netty.channel.*;
 import io.netty.handler.timeout.*;
+import lombok.extern.slf4j.*;
 import org.springframework.context.annotation.*;
 import org.springframework.http.*;
 import org.springframework.http.client.reactive.*;
+import org.springframework.security.core.context.*;
 import org.springframework.web.reactive.function.client.*;
 import reactor.netty.http.client.*;
 
 import java.time.*;
 
+import static reactor.core.publisher.Mono.*;
+
 @Configuration
+@Slf4j
 public class WebClientConfig {
   @Bean
   public WebClient.Builder webClientBuilder() {
@@ -29,19 +35,40 @@ public class WebClientConfig {
         .filter(logResponse());
   }
 
+  // Relay del Authorization: Bearer recibido al backend destino
+  @Bean
+  public ExchangeFilterFunction bearerRelayFilter() {
+    return (request, next) ->
+        ReactiveSecurityContextHolder.getContext()
+            .map(SecurityContext::getAuthentication)
+            .map(auth -> {
+              final String token = (auth instanceof JwtPreAuthenticatedToken)
+                  ? (String) auth.getCredentials()
+                  : null;
+              ClientRequest.Builder builder = ClientRequest.from(request);
+              if (token != null && !token.isBlank()) {
+                builder.headers(h -> h.set(HttpHeaders.AUTHORIZATION, "Bearer " + token));
+              }
+              return builder.build();
+            })
+            .defaultIfEmpty(request)
+            .flatMap(next::exchange);
+  }
+
   private ExchangeFilterFunction logRequest() {
     return ExchangeFilterFunction.ofRequestProcessor(req -> {
-      org.slf4j.LoggerFactory.getLogger(WebClient.class)
-          .debug("WebClient Req: {} {}", req.method(), req.url());
-      return reactor.core.publisher.Mono.just(req);
+      log.debug("WebClient Request: {} {}", req.method(), req.url());
+      req.headers().forEach((name, values) -> values.forEach(value -> log.debug("{}={}", name, value)));
+      return just(req);
     });
   }
 
   private ExchangeFilterFunction logResponse() {
     return ExchangeFilterFunction.ofResponseProcessor(res -> {
-      org.slf4j.LoggerFactory.getLogger(WebClient.class)
-          .debug("WebClient Res: status={}", res.statusCode());
-      return reactor.core.publisher.Mono.just(res);
+      log.debug("WebClient Response: status={}", res.statusCode());
+      res.headers().asHttpHeaders()
+          .forEach((name, values) -> values.forEach(value -> log.debug("{}={}", name, value)));
+      return just(res);
     });
   }
 }

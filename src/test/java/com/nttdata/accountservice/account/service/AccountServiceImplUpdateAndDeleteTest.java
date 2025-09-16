@@ -3,7 +3,6 @@ package com.nttdata.accountservice.account.service;
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
 import com.nttdata.accountservice.model.*;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.repository.*;
 import com.nttdata.accountservice.service.impl.*;
 import com.nttdata.accountservice.service.policy.*;
@@ -41,12 +40,12 @@ class AccountServiceImplUpdateAndDeleteTest {
 
   @Test
   void updateAccount_ok() {
-    Account existing = new Account();
+    com.nttdata.accountservice.model.entity.Account existing = new com.nttdata.accountservice.model.entity.Account();
     existing.setId("A1");
     existing.setMonthlyMovementLimit(5);
 
     when(repository.findById("A1")).thenReturn(Mono.just(existing));
-    when(repository.save(any(Account.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+    when(repository.save(any(com.nttdata.accountservice.model.entity.Account.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
     AccountRequest req = new AccountRequest()
         .holderDocument("12345678")
@@ -63,7 +62,7 @@ class AccountServiceImplUpdateAndDeleteTest {
         })
         .verifyComplete();
 
-    ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
+    ArgumentCaptor<com.nttdata.accountservice.model.entity.Account> captor = ArgumentCaptor.forClass(com.nttdata.accountservice.model.entity.Account.class);
     verify(repository).save(captor.capture());
     assertEquals(9, captor.getValue().getMonthlyMovementLimit());
   }
@@ -85,7 +84,7 @@ class AccountServiceImplUpdateAndDeleteTest {
 
   @Test
   void deleteAccount_ok() {
-    Account e = new Account();
+    com.nttdata.accountservice.model.entity.Account e = new com.nttdata.accountservice.model.entity.Account();
     e.setId("A1");
     when(repository.findById("A1")).thenReturn(Mono.just(e));
     when(repository.deleteById("A1")).thenReturn(Mono.empty());

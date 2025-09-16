@@ -1,8 +1,6 @@
 package com.nttdata.accountservice.account.mapper;
 
 import com.nttdata.accountservice.model.*;
-import com.nttdata.accountservice.model.entity.LinkedCard;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.service.impl.*;
 import org.junit.jupiter.api.*;
 
@@ -15,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AccountMapperExtraTest {
   @Test
   void toResponse_mapeaCamposBasicos() {
-    Account e = new Account();
+    com.nttdata.accountservice.model.entity.Account e = new com.nttdata.accountservice.model.entity.Account();
     e.setId("CHECK123");
     e.setAccountType("CHECKING");
     e.setMonthlyMovementLimit(7);
@@ -31,7 +29,7 @@ class AccountMapperExtraTest {
 
   @Test
   void mergeIntoEntity_actualizaSoloCamposPresentes() {
-    Account target = new Account();
+    com.nttdata.accountservice.model.entity.Account target = new com.nttdata.accountservice.model.entity.Account();
     target.setMonthlyMovementLimit(5);
 
     AccountRequest req = new AccountRequest()
@@ -54,7 +52,7 @@ class AccountMapperExtraTest {
         .accountType(AccountRequest.AccountTypeEnum.SAVINGS)
         .balance(new BigDecimal("10"));
 
-    Account e = AccountMapper.toEntity(rq);
+    com.nttdata.accountservice.model.entity.Account e = AccountMapper.toEntity(rq);
 
     // sólo quedan firmantes válidos: 8-11 dígitos, normalizados y sin duplicados
     List<String> signers = e.getAuthorizedSigners();
@@ -64,7 +62,7 @@ class AccountMapperExtraTest {
 
   @Test
   void toResponse_enumsDesconocidos_devuelvenNull() {
-    Account e = new Account();
+    com.nttdata.accountservice.model.entity.Account e = new com.nttdata.accountservice.model.entity.Account();
     e.setHolderDocument("  99999999 ");
     e.setHolderDocumentType("XYZ");
     e.setAccountType("UNKNOWN");
@@ -77,7 +75,7 @@ class AccountMapperExtraTest {
 
   @Test
   void toResponse_linkedCardSeMapeaCorrectamente() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     LinkedCard lc = new LinkedCard();
     lc.setId("LC1");
     acc.setLinkedCard(lc);
@@ -95,7 +93,7 @@ class AccountMapperExtraTest {
     lc.setId("LC2");
     req.setLinkedCard(lc);
 
-    Account acc = AccountMapper.toEntity(req);
+    com.nttdata.accountservice.model.entity.Account acc = AccountMapper.toEntity(req);
 
     assertNotNull(acc.getLinkedCard());
     assertEquals("LC2", acc.getLinkedCard().getId());
@@ -109,7 +107,7 @@ class AccountMapperExtraTest {
     lc.setId("LC3");
     req.setLinkedCard(lc);
 
-    Account target = new Account(); // no tiene linkedCard
+    com.nttdata.accountservice.model.entity.Account target = new com.nttdata.accountservice.model.entity.Account(); // no tiene linkedCard
 
     AccountMapper.mergeIntoEntity(target, req);
 
@@ -117,7 +115,7 @@ class AccountMapperExtraTest {
     assertEquals("LC3", target.getLinkedCard().getId());
 
     // Caso 2: target ya tiene linkedCard
-    Account target2 = new Account();
+    com.nttdata.accountservice.model.entity.Account target2 = new com.nttdata.accountservice.model.entity.Account();
     LinkedCard existingLc = new LinkedCard();
     existingLc.setId("OLD");
     target2.setLinkedCard(existingLc);
@@ -135,7 +133,7 @@ class AccountMapperExtraTest {
     AccountRequest req = new AccountRequest()
         .authorizedSigners(List.of("  12345678 ", "ABC", "00001111222"));
 
-    Account target = new Account();
+    com.nttdata.accountservice.model.entity.Account target = new com.nttdata.accountservice.model.entity.Account();
 
     AccountMapper.mergeIntoEntity(target, req);
 
@@ -154,7 +152,7 @@ class AccountMapperExtraTest {
 
   @Test
   void mergeIntoEntity_conRequestNull() {
-    AccountMapper.mergeIntoEntity(new Account(), null);
+    AccountMapper.mergeIntoEntity(new com.nttdata.accountservice.model.entity.Account(), null);
   }
 
 

@@ -22,6 +22,7 @@
         <!-- Versiones compatibles -->
         <checkstyle.version>10.26.1</checkstyle.version>
         <maven-checkstyle-plugin.version>3.3.1</maven-checkstyle-plugin.version>
+        <jjwt.version>0.12.5</jjwt.version>
     </properties>
 
     <dependencyManagement>
@@ -155,6 +156,37 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
+        <!-- Seguridad -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- JJWT -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Tests de seguridad -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 
@@ -181,7 +213,7 @@
                         <goals><goal>prepare-agent</goal></goals>
                     </execution>
 
-                    <!-- GENERAR jacoco.xml (para Sonar y tu site) -->
+                    <!-- GENERAR jacoco.xml (para Sonar y  site) -->
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>
@@ -190,9 +222,12 @@
                             <excludes>
 
                                 <exclude>**/com/nttdata/accountservice/api/*Api*.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/model/*</exclude>
+                                <exclude>**/com/nttdata/accountservice/model/**</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/JacksonConfig.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/WebClientConfig.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/security/**</exclude>
+                                <exclude>**/com/nttdata/accountservice/integration/credits/CreditDTO.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/integration/customers/EligibilityResponse.class</exclude>
 
                                 <exclude>com/nttdata/accountservice/AccountServiceApplication.class</exclude>
                             </excludes>
@@ -205,8 +240,12 @@
                         <configuration>
                             <excludes>
                                 <exclude>**/com/nttdata/accountservice/api/*Api*.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/model/*</exclude>
+                                <exclude>**/com/nttdata/accountservice/model/**</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/JacksonConfig.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/security/**</exclude>
+                                <exclude>**/com/nttdata/accountservice/integration/credits/CreditDTO.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/integration/customers/EligibilityResponse.class</exclude>
+
                                 <exclude>com/nttdata/accountservice/AccountServiceApplication.class</exclude>
                             </excludes>
                             <rules>

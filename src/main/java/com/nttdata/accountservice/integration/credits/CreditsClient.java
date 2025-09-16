@@ -5,6 +5,7 @@ import io.github.resilience4j.reactor.circuitbreaker.operator.*;
 import io.github.resilience4j.reactor.timelimiter.*;
 import io.github.resilience4j.timelimiter.*;
 import lombok.*;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.*;
@@ -20,6 +21,7 @@ public class CreditsClient {
   private final WebClient.Builder webClientBuilder;
   private final CircuitBreakerRegistry circuitBreakerRegistry;
   private final TimeLimiterRegistry timeLimiterRegistry;
+  private final ExchangeFilterFunction bearerRelayFilter;
 
   @Value("${services.credits.url}")
   private String baseUrl; // http://localhost:8585/api/v1
@@ -27,7 +29,9 @@ public class CreditsClient {
   public Mono<Boolean> hasActiveCreditCard(String customerId) {
     var cb = circuitBreakerRegistry.circuitBreaker("credits");
     var tl = timeLimiterRegistry.timeLimiter("credits");
-    return webClientBuilder.baseUrl(baseUrl).build()
+    return webClientBuilder.baseUrl(baseUrl)
+        .filter(bearerRelayFilter)
+        .build()
         .get()
         .uri(u -> u.path("/credits").queryParam("customerId", customerId).build())
         .retrieve()

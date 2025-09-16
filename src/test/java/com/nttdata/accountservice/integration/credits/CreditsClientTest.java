@@ -13,31 +13,30 @@ import static org.junit.Assert.*;
 class CreditsClientTest {
   @Test
   void hasActiveCreditCard_trueCuandoExisteTarjetaActiva() throws Exception {
-    MockWebServer server = new MockWebServer();
+  try (MockWebServer server = new MockWebServer()) {
     server.enqueue(new MockResponse()
-        .setResponseCode(200)
-        .addHeader("Content-Type", "application/json")
-        .setBody("[{\"id\":\"CR1\",\"type\":\"CREDIT_CARD\",\"status\":\"ACTIVE\"}]")
-    );
+      .setResponseCode(200)
+      .addHeader("Content-Type", "application/json")
+      .setBody("[{\"id\":\"CR1\",\"type\":\"CREDIT_CARD\",\"status\":\"ACTIVE\"}]"));
 
     String base = server.url("/api/v1").toString();
 
-
+    ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
     CreditsClient client = new CreditsClient(
-        WebClient.builder(),
-        CircuitBreakerRegistry.ofDefaults(),
-        TimeLimiterRegistry.ofDefaults()
+      WebClient.builder(),
+      CircuitBreakerRegistry.ofDefaults(),
+      TimeLimiterRegistry.ofDefaults(),
+      noAuth
     );
     ReflectionTestUtils.setField(client, "baseUrl", base);
 
     StepVerifier.create(client.hasActiveCreditCard("CUST1"))
-        .expectNext(true)
-        .verifyComplete();
+      .expectNext(true)
+      .verifyComplete();
 
     RecordedRequest req = server.takeRequest();
     assertEquals("/api/v1/credits", req.getRequestUrl().encodedPath());
     assertEquals("CUST1", req.getRequestUrl().queryParameter("customerId"));
-
-    server.shutdown();
+  }
   }
 }
