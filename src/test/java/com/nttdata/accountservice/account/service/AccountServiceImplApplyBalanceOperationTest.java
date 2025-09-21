@@ -5,7 +5,6 @@ import com.nttdata.accountservice.config.*;
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
 import com.nttdata.accountservice.model.*;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.repository.*;
 import com.nttdata.accountservice.service.impl.*;
 import com.nttdata.accountservice.service.policy.*;
@@ -45,7 +44,7 @@ class AccountServiceImplApplyBalanceOperationTest {
 
   @Test
   void deposit_ok_aplicaSinErrores() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     acc.setId("A1");
     acc.setAccountType("SAVINGS");
     acc.setBalance(new BigDecimal("100.00"));
@@ -53,7 +52,7 @@ class AccountServiceImplApplyBalanceOperationTest {
     acc.setCommissionFee(new BigDecimal("1.50"));
 
     when(repository.findById("A1")).thenReturn(Mono.just(acc));
-    when(repository.save(any(Account.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+    when(repository.save(any(com.nttdata.accountservice.model.entity.Account.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
     BalanceOperationRequest rq = new BalanceOperationRequest()
         .operationId("op-1")
@@ -69,7 +68,7 @@ class AccountServiceImplApplyBalanceOperationTest {
         .verifyComplete();
 
     verify(repository).findById("A1");
-    verify(repository).save(any(Account.class));
+    verify(repository).save(any(com.nttdata.accountservice.model.entity.Account.class));
   }
 
   @Test
@@ -91,7 +90,7 @@ class AccountServiceImplApplyBalanceOperationTest {
 
   @Test
   void withdraw_conSaldoInsuficiente_lanzaError() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     acc.setId("A1");
     acc.setAccountType("SAVINGS");
     acc.setBalance(new BigDecimal("5"));        // saldo insuficiente
@@ -119,7 +118,7 @@ class AccountServiceImplApplyBalanceOperationTest {
 
   @Test
   void deposit_superaLimite_cobraComision() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     acc.setId("A2");
     acc.setAccountType("SAVINGS");
     acc.setBalance(new BigDecimal("100"));
@@ -127,7 +126,7 @@ class AccountServiceImplApplyBalanceOperationTest {
     acc.setCommissionFee(new BigDecimal("1.50"));
 
     when(repository.findById("A2")).thenReturn(Mono.just(acc));
-    when(repository.save(any(Account.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+    when(repository.save(any(com.nttdata.accountservice.model.entity.Account.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
     BalanceOperationRequest rq = new BalanceOperationRequest()
         .operationId("op-3")
@@ -145,7 +144,7 @@ class AccountServiceImplApplyBalanceOperationTest {
 
   @Test
   void applyBalanceOperation_idempotente_noDuplica() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     acc.setId("A3");
     acc.setAccountType("SAVINGS");
     acc.setBalance(new BigDecimal("100"));
@@ -172,7 +171,7 @@ class AccountServiceImplApplyBalanceOperationTest {
 
   @Test
   void withdraw_fixedTerm_enDiaNoPermitido() {
-    Account acc = new Account();
+    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
     acc.setId("A4");
     acc.setAccountType("FIXED_TERM");
     int notToday = java.time.LocalDate.now().getDayOfMonth() == 28 ? 27 : 28;

@@ -2,7 +2,6 @@ package com.nttdata.accountservice.account.service;
 
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.repository.*;
 import com.nttdata.accountservice.service.impl.*;
 import com.nttdata.accountservice.service.policy.*;
@@ -39,7 +38,7 @@ class AccountServiceImplListTest {
 
   @Test
   void listAccounts_ok() {
-    Account e = new Account();
+    com.nttdata.accountservice.model.entity.Account e = new com.nttdata.accountservice.model.entity.Account();
     e.setId("A1");
     e.setAccountType("SAVINGS");
     when(repository.findAll()).thenReturn(Flux.just(e));

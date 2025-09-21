@@ -40,14 +40,14 @@ public class Account {
 
   private LocalDate creationDate;
   // Tarjeta vinculada
-  private LinkedCard linkedCard;
+  private com.nttdata.accountservice.model.LinkedCard linkedCard;
   // Nuevos campos entregable II
   private Integer freeTransactionsLimit;// operaciones sin comisión
   private BigDecimal commissionFee;
   /// / comisión por transacción extra
 
   private ArrayList<String> opIds;
-  private OpsCounter opsCounter;
+  private com.nttdata.accountservice.model.entity.OpsCounter opsCounter;
 
 }
 

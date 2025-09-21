@@ -5,6 +5,7 @@ import io.github.resilience4j.reactor.circuitbreaker.operator.*;
 import io.github.resilience4j.reactor.timelimiter.*;
 import io.github.resilience4j.timelimiter.*;
 import lombok.*;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.*;
@@ -13,7 +14,7 @@ import org.springframework.web.server.*;
 import reactor.core.publisher.*;
 
 import java.util.concurrent.*;
-
+@lombok.extern.slf4j.Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomersClient {
@@ -22,14 +23,16 @@ public class CustomersClient {
   private final CircuitBreakerRegistry circuitBreakerRegistry;
   private final TimeLimiterRegistry timeLimiterRegistry;
 
+
   @Value("${services.customers.url}")
   private String baseUrl; // http://localhost:8086/api/v1
 
   public Mono<EligibilityResponse> getEligibilityByDocument(
       String documentType, String documentNumber) {
     CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker("customers");
-
-    return webClientBuilder.baseUrl(baseUrl).build()
+    log.info("CustomersClient - baseUrl configurado: {}", baseUrl);
+    return webClientBuilder.baseUrl(baseUrl)
+        .build()
         .get()
         .uri(uriBuilder -> uriBuilder
             .path("/customers/eligibility")

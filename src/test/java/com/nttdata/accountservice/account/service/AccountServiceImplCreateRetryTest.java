@@ -3,7 +3,6 @@ package com.nttdata.accountservice.account.service;
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
 import com.nttdata.accountservice.model.*;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.repository.*;
 import com.nttdata.accountservice.service.impl.*;
 import com.nttdata.accountservice.service.policy.*;
@@ -53,7 +52,7 @@ class AccountServiceImplCreateRetryTest {
     when(rulesService.validateLegacyRules(any(), any(), any()))
         .thenReturn(Mono.empty());
 
-    when(repository.save(any(Account.class)))
+    when(repository.save(any(com.nttdata.accountservice.model.entity.Account.class)))
         .thenAnswer(inv -> Mono.error(new DuplicateKeyException("dup")))
         .thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
@@ -66,6 +65,6 @@ class AccountServiceImplCreateRetryTest {
         })
         .verifyComplete();
 
-    verify(repository, times(2)).save(any(Account.class));
+    verify(repository, times(2)).save(any(com.nttdata.accountservice.model.entity.Account.class));
   }
 }

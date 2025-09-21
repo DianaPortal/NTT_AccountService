@@ -15,20 +15,20 @@ import java.util.concurrent.*;
 class CustomersClientResilienceTest {
   @Test
   void timeoutDe2s_dispara504() throws Exception {
-    MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("{}").setBodyDelay(3, TimeUnit.SECONDS)); // > 2s
-    String base = server.url("/api/v1").toString();
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(new MockResponse().setBody("{}").setBodyDelay(3, TimeUnit.SECONDS)); // > 2s
+      String base = server.url("/api/v1").toString();
 
     var cbReg = CircuitBreakerRegistry.ofDefaults();
     var tlReg = TimeLimiterRegistry.of(TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(2)).build());
 
-    CustomersClient client = new CustomersClient(WebClient.builder(), cbReg, tlReg);
-    ReflectionTestUtils.setField(client, "baseUrl", base);
+      ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      CustomersClient client = new CustomersClient(WebClient.builder(), cbReg, tlReg, noAuth);
+      ReflectionTestUtils.setField(client, "baseUrl", base);
 
-    StepVerifier.create(client.getEligibilityByDocument("DNI", "12345678"))
-        .expectError(ResponseStatusException.class) // 504
-        .verify();
-
-    server.shutdown();
+      StepVerifier.create(client.getEligibilityByDocument("DNI", "12345678"))
+          .expectError(ResponseStatusException.class) // 504
+          .verify();
+    }
   }
 }

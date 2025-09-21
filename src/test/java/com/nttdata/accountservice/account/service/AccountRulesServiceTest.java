@@ -2,7 +2,6 @@ package com.nttdata.accountservice.account.service;
 
 
 import com.nttdata.accountservice.model.*;
-import com.nttdata.accountservice.model.entity.*;
 import com.nttdata.accountservice.repository.*;
 import com.nttdata.accountservice.service.rules.*;
 import org.junit.jupiter.api.*;
@@ -22,7 +21,7 @@ class AccountRulesServiceTest {
 
   @Test
   void personal_noPuedeTenerDosSavings() {
-    Account existing = new Account();
+    com.nttdata.accountservice.model.entity.Account existing = new com.nttdata.accountservice.model.entity.Account();
     existing.setAccountType("SAVINGS");
     when(repository.findByHolderDocument("123")).thenReturn(Flux.just(existing));
 
@@ -65,7 +64,7 @@ class AccountRulesServiceTest {
 
   @Test
   void personal_noPuedeTenerDosChecking() {
-    Account existing = new Account();
+    com.nttdata.accountservice.model.entity.Account existing = new com.nttdata.accountservice.model.entity.Account();
     existing.setAccountType("CHECKING");
     when(repository.findByHolderDocument("456")).thenReturn(Flux.just(existing));
 
