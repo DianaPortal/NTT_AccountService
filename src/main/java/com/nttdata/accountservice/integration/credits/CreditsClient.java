@@ -21,7 +21,7 @@ public class CreditsClient {
   private final WebClient.Builder webClientBuilder;
   private final CircuitBreakerRegistry circuitBreakerRegistry;
   private final TimeLimiterRegistry timeLimiterRegistry;
-  private final ExchangeFilterFunction bearerRelayFilter;
+
 
   @Value("${services.credits.url}")
   private String baseUrl; // http://localhost:8585/api/v1
@@ -30,7 +30,6 @@ public class CreditsClient {
     var cb = circuitBreakerRegistry.circuitBreaker("credits");
     var tl = timeLimiterRegistry.timeLimiter("credits");
     return webClientBuilder.baseUrl(baseUrl)
-        .filter(bearerRelayFilter)
         .build()
         .get()
         .uri(u -> u.path("/credits").queryParam("customerId", customerId).build())

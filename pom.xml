@@ -38,11 +38,17 @@
     </dependencyManagement>
 
     <dependencies>
-
+        <!--
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
@@ -146,37 +152,33 @@
             <version>1.7.1</version>
         </dependency>
 
+<<<<<<< Updated upstream
 
 
+=======
+        <!--Redis-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <!--Eureka-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+>>>>>>> Stashed changes
         <!-- Seguridad -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-        <!-- JJWT -->
         <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-            <version>${jjwt.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-            <version>${jjwt.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
-            <version>${jjwt.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- Tests de seguridad -->
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
     </dependencies>
@@ -217,7 +219,7 @@
                                 <exclude>**/com/nttdata/accountservice/model/**</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/JacksonConfig.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/WebClientConfig.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/security/**</exclude>
+
                                 <exclude>**/com/nttdata/accountservice/integration/credits/CreditDTO.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/integration/customers/EligibilityResponse.class</exclude>
 
@@ -234,7 +236,7 @@
                                 <exclude>**/com/nttdata/accountservice/api/*Api*.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/model/**</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/JacksonConfig.class</exclude>
-                                <exclude>**/com/nttdata/accountservice/security/**</exclude>
+
                                 <exclude>**/com/nttdata/accountservice/integration/credits/CreditDTO.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/integration/customers/EligibilityResponse.class</exclude>
 

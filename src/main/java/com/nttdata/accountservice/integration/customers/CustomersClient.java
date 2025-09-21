@@ -14,7 +14,7 @@ import org.springframework.web.server.*;
 import reactor.core.publisher.*;
 
 import java.util.concurrent.*;
-
+@lombok.extern.slf4j.Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomersClient {
@@ -22,7 +22,7 @@ public class CustomersClient {
   private final WebClient.Builder webClientBuilder;
   private final CircuitBreakerRegistry circuitBreakerRegistry;
   private final TimeLimiterRegistry timeLimiterRegistry;
-  private final ExchangeFilterFunction bearerRelayFilter;
+
 
   @Value("${services.customers.url}")
   private String baseUrl; // http://localhost:8086/api/v1
@@ -30,9 +30,8 @@ public class CustomersClient {
   public Mono<EligibilityResponse> getEligibilityByDocument(
       String documentType, String documentNumber) {
     CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker("customers");
-
+    log.info("CustomersClient - baseUrl configurado: {}", baseUrl);
     return webClientBuilder.baseUrl(baseUrl)
-        .filter(bearerRelayFilter)
         .build()
         .get()
         .uri(uriBuilder -> uriBuilder
