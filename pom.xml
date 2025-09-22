@@ -152,10 +152,7 @@
             <version>1.7.1</version>
         </dependency>
 
-<<<<<<< Updated upstream
 
-
-=======
         <!--Redis-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -170,7 +167,7 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
->>>>>>> Stashed changes
+
         <!-- Seguridad -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -179,6 +176,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
     </dependencies>

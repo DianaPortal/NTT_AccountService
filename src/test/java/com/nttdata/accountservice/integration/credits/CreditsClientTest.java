@@ -13,30 +13,31 @@ import static org.junit.Assert.*;
 class CreditsClientTest {
   @Test
   void hasActiveCreditCard_trueCuandoExisteTarjetaActiva() throws Exception {
-  try (MockWebServer server = new MockWebServer()) {
-    server.enqueue(new MockResponse()
-      .setResponseCode(200)
-      .addHeader("Content-Type", "application/json")
-      .setBody("[{\"id\":\"CR1\",\"type\":\"CREDIT_CARD\",\"status\":\"ACTIVE\"}]"));
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(new MockResponse()
+          .setResponseCode(200)
+          .addHeader("Content-Type", "application/json")
+          .setBody("[{\"id\":\"CR1\",\"type\":\"CREDIT_CARD\",\"status\":\"ACTIVE\"}]"));
 
-    String base = server.url("/api/v1").toString();
+      String base = server.url("/api/v1").toString();
 
-    ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
-    CreditsClient client = new CreditsClient(
-      WebClient.builder(),
-      CircuitBreakerRegistry.ofDefaults(),
-      TimeLimiterRegistry.ofDefaults(),
-      noAuth
-    );
-    ReflectionTestUtils.setField(client, "baseUrl", base);
+      ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      WebClient.Builder builder = WebClient.builder().filter(noAuth);
 
-    StepVerifier.create(client.hasActiveCreditCard("CUST1"))
-      .expectNext(true)
-      .verifyComplete();
+      CreditsClient client = new CreditsClient(
+          builder,
+          CircuitBreakerRegistry.ofDefaults(),
+          TimeLimiterRegistry.ofDefaults()
+      );
+      ReflectionTestUtils.setField(client, "baseUrl", base);
 
-    RecordedRequest req = server.takeRequest();
-    assertEquals("/api/v1/credits", req.getRequestUrl().encodedPath());
-    assertEquals("CUST1", req.getRequestUrl().queryParameter("customerId"));
-  }
+      StepVerifier.create(client.hasActiveCreditCard("CUST1"))
+          .expectNext(true)
+          .verifyComplete();
+
+      RecordedRequest req = server.takeRequest();
+      assertEquals("/api/v1/credits", req.getRequestUrl().encodedPath());
+      assertEquals("CUST1", req.getRequestUrl().queryParameter("customerId"));
+    }
   }
 }

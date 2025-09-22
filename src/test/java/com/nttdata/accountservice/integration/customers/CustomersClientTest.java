@@ -13,31 +13,32 @@ import static org.junit.Assert.*;
 class CustomersClientTest {
   @Test
   void getEligibilityByDocument_enviaTipoYNumeroComoQueryParams() throws Exception {
-  try (MockWebServer server = new MockWebServer()) {
-    server.enqueue(new MockResponse()
-      .setResponseCode(200)
-      .addHeader("Content-Type", "application/json")
-      .setBody("{\"customerId\":\"C1\",\"type\":\"PERSONAL\",\"profile\":\"VIP\",\"hasActiveCreditCard\":true}"));
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(new MockResponse()
+          .setResponseCode(200)
+          .addHeader("Content-Type", "application/json")
+          .setBody("{\"customerId\":\"C1\",\"type\":\"PERSONAL\",\"profile\":\"VIP\",\"hasActiveCreditCard\":true}"));
 
-    String base = server.url("/api/v1").toString();
+      String base = server.url("/api/v1").toString();
 
-    ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
-    CustomersClient client = new CustomersClient(
-      WebClient.builder(),
-      CircuitBreakerRegistry.ofDefaults(),
-      TimeLimiterRegistry.ofDefaults(),
-      noAuth
-    );
-    ReflectionTestUtils.setField(client, "baseUrl", base);
+      ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      WebClient.Builder builder = WebClient.builder().filter(noAuth);
 
-    StepVerifier.create(client.getEligibilityByDocument("DNI", "12345678"))
-      .assertNext(r -> assertEquals("C1", r.getCustomerId()))
-      .verifyComplete();
+      CustomersClient client = new CustomersClient(
+          builder,
+          CircuitBreakerRegistry.ofDefaults(),
+          TimeLimiterRegistry.ofDefaults()
+      );
+      ReflectionTestUtils.setField(client, "baseUrl", base);
 
-    RecordedRequest req = server.takeRequest();
-    assertEquals("/api/v1/customers/eligibility", req.getRequestUrl().encodedPath());
-    assertEquals("DNI", req.getRequestUrl().queryParameter("documentType"));
-    assertEquals("12345678", req.getRequestUrl().queryParameter("documentNumber"));
-  }
+      StepVerifier.create(client.getEligibilityByDocument("DNI", "12345678"))
+          .assertNext(r -> assertEquals("C1", r.getCustomerId()))
+          .verifyComplete();
+
+      RecordedRequest req = server.takeRequest();
+      assertEquals("/api/v1/customers/eligibility", req.getRequestUrl().encodedPath());
+      assertEquals("DNI", req.getRequestUrl().queryParameter("documentType"));
+      assertEquals("12345678", req.getRequestUrl().queryParameter("documentNumber"));
+    }
   }
 }

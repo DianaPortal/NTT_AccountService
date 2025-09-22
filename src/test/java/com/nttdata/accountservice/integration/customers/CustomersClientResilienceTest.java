@@ -19,11 +19,13 @@ class CustomersClientResilienceTest {
       server.enqueue(new MockResponse().setBody("{}").setBodyDelay(3, TimeUnit.SECONDS)); // > 2s
       String base = server.url("/api/v1").toString();
 
-    var cbReg = CircuitBreakerRegistry.ofDefaults();
-    var tlReg = TimeLimiterRegistry.of(TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(2)).build());
+      var cbReg = CircuitBreakerRegistry.ofDefaults();
+      var tlReg = TimeLimiterRegistry.of(TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(2)).build());
 
       ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
-      CustomersClient client = new CustomersClient(WebClient.builder(), cbReg, tlReg, noAuth);
+      WebClient.Builder builder = WebClient.builder().filter(noAuth);
+
+      CustomersClient client = new CustomersClient(builder, cbReg, tlReg);
       ReflectionTestUtils.setField(client, "baseUrl", base);
 
       StepVerifier.create(client.getEligibilityByDocument("DNI", "12345678"))

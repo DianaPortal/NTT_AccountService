@@ -12,13 +12,11 @@ import java.time.*;
 
 class CreditsClientExtraTest {
 
-
   TimeLimiterRegistry relaxedRegistry = TimeLimiterRegistry.of(
       TimeLimiterConfig.custom()
           .timeoutDuration(Duration.ofSeconds(10))
           .build()
   );
-
 
   @Test
   void hasActiveCreditCard_listaVacia_devuelveFalse() throws Exception {
@@ -30,11 +28,12 @@ class CreditsClientExtraTest {
       String base = server.url("/api/v1").toString();
 
       ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      WebClient.Builder builder = WebClient.builder().filter(noAuth);
+
       CreditsClient client = new CreditsClient(
-          WebClient.builder(),
+          builder,
           CircuitBreakerRegistry.ofDefaults(),
-          relaxedRegistry,
-          noAuth
+          relaxedRegistry
       );
       ReflectionTestUtils.setField(client, "baseUrl", base);
 
@@ -51,11 +50,12 @@ class CreditsClientExtraTest {
       String base = server.url("/api/v1").toString();
 
       ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      WebClient.Builder builder = WebClient.builder().filter(noAuth);
+
       CreditsClient client = new CreditsClient(
-          WebClient.builder(),
+          builder,
           CircuitBreakerRegistry.ofDefaults(),
-          relaxedRegistry,
-          noAuth
+          relaxedRegistry
       );
       ReflectionTestUtils.setField(client, "baseUrl", base);
 

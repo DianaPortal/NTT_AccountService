@@ -23,11 +23,12 @@ class CustomersClientErrorTest {
       String base = server.url("/api/v1").toString();
 
       ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+      WebClient.Builder builder = WebClient.builder().filter(noAuth);
+
       CustomersClient client = new CustomersClient(
-          WebClient.builder(),
+          builder,
           CircuitBreakerRegistry.ofDefaults(),
-          relaxedRegistry,
-          noAuth
+          relaxedRegistry
       );
       ReflectionTestUtils.setField(client, "baseUrl", base);
 
