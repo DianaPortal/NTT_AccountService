@@ -1,33 +1,44 @@
 package com.nttdata.accountservice.account.service;
 
-import com.nttdata.accountservice.config.BusinessException;
-import com.nttdata.accountservice.integration.credits.CreditsClient;
-import com.nttdata.accountservice.integration.customers.CustomersClient;
-import com.nttdata.accountservice.model.AccountRequest;
-import com.nttdata.accountservice.repository.AccountRepository;
-import com.nttdata.accountservice.service.impl.AccountServiceImpl;
-import com.nttdata.accountservice.service.policy.AccountPolicyService;
-import com.nttdata.accountservice.service.rules.AccountRulesService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import reactor.test.StepVerifier;
+/*
+ * Validaciones adicionales por tipo de cuenta.
+ * SAVINGS: monthlyMovementLimit requerido, prohibiciones maintenanceFee / allowedDayOfMonth
+ * CHECKING: monthlyMovementLimit + maintenanceFee requeridos, prohibición allowedDayOfMonth
+ * FIXED_TERM: allowedDayOfMonth rango 1-28, prohibiciones otras propiedades.
+ */
 
-import java.math.BigDecimal;
+import com.nttdata.accountservice.config.*;
+import com.nttdata.accountservice.integration.credits.*;
+import com.nttdata.accountservice.integration.customers.*;
+import com.nttdata.accountservice.model.*;
+import com.nttdata.accountservice.repository.*;
+import com.nttdata.accountservice.service.impl.*;
+import com.nttdata.accountservice.service.policy.*;
+import com.nttdata.accountservice.service.rules.*;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
+import org.mockito.*;
+import org.mockito.junit.jupiter.*;
+import reactor.test.*;
+
+import java.math.*;
 
 import static com.nttdata.accountservice.model.AccountRequest.AccountTypeEnum.*;
-import static com.nttdata.accountservice.model.AccountRequest.HolderDocumentTypeEnum.DNI;
+import static com.nttdata.accountservice.model.AccountRequest.HolderDocumentTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceImplAdditionalValidationTest {
-  @Mock AccountRepository repository;
-  @Mock CustomersClient customersClient;
-  @Mock CreditsClient creditsClient;
-  @Mock AccountRulesService rulesService;
-  @Mock AccountPolicyService policyService;
+  @Mock
+  AccountRepository repository;
+  @Mock
+  CustomersClient customersClient;
+  @Mock
+  CreditsClient creditsClient;
+  @Mock
+  AccountRulesService rulesService;
+  @Mock
+  AccountPolicyService policyService;
 
   AccountServiceImpl service;
 

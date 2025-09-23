@@ -1,5 +1,11 @@
 package com.nttdata.accountservice.account.service;
 
+/*
+ * Tests principales de applyBalanceOperation
+ * Cubre: depósito simple, depósito con comisión, retiro saldo insuficiente,
+ * idempotencia, débito FIXED_TERM en día no permitido.
+ */
+
 
 import com.nttdata.accountservice.config.*;
 import com.nttdata.accountservice.integration.credits.*;

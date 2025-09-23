@@ -221,6 +221,8 @@
                                 <exclude>**/com/nttdata/accountservice/model/**</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/JacksonConfig.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/WebClientConfig.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/config/CustomReactiveJwtDecoder.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/config/SecurityConfig.class</exclude>
 
                                 <exclude>**/com/nttdata/accountservice/integration/credits/CreditDTO.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/integration/customers/EligibilityResponse.class</exclude>
@@ -238,6 +240,9 @@
                                 <exclude>**/com/nttdata/accountservice/api/*Api*.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/model/**</exclude>
                                 <exclude>**/com/nttdata/accountservice/config/JacksonConfig.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/config/WebClientConfig.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/config/CustomReactiveJwtDecoder.class</exclude>
+                                <exclude>**/com/nttdata/accountservice/config/SecurityConfig.class</exclude>
 
                                 <exclude>**/com/nttdata/accountservice/integration/credits/CreditDTO.class</exclude>
                                 <exclude>**/com/nttdata/accountservice/integration/customers/EligibilityResponse.class</exclude>

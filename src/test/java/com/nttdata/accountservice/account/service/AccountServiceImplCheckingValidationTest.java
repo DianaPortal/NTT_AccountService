@@ -1,5 +1,10 @@
 package com.nttdata.accountservice.account.service;
 
+/*
+ * Validaciones específicas de cuentas CHECKING
+ * Combinaciones de monthlyMovementLimit / maintenanceFee y errores asociados.
+ */
+
 import com.nttdata.accountservice.config.*;
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;

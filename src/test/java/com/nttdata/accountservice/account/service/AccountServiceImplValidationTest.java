@@ -1,5 +1,10 @@
 package com.nttdata.accountservice.account.service;
 
+/*
+ * Validaciones base de createAccount
+ * Campos obligatorios, formato documento, balance inicial negativo.
+ */
+
 import com.nttdata.accountservice.config.*;
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;

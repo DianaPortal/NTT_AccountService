@@ -1,33 +1,41 @@
 package com.nttdata.accountservice.account.service;
 
-import com.nttdata.accountservice.integration.credits.CreditsClient;
-import com.nttdata.accountservice.integration.customers.CustomersClient;
-import com.nttdata.accountservice.model.AccountRequest;
-import com.nttdata.accountservice.integration.customers.EligibilityResponse;
-import com.nttdata.accountservice.repository.AccountRepository;
-import com.nttdata.accountservice.service.impl.AccountServiceImpl;
-import com.nttdata.accountservice.service.policy.AccountPolicyService;
-import com.nttdata.accountservice.service.rules.AccountRulesService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.test.util.ReflectionTestUtils;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
+/*
+ * Combinaciones de flags de beneficios
+ * Verifica comportamiento cuando los flags requireCcForVip / requireCcForPyme cambian.
+ */
+
+import com.nttdata.accountservice.integration.credits.*;
+import com.nttdata.accountservice.integration.customers.*;
+import com.nttdata.accountservice.model.*;
+import com.nttdata.accountservice.repository.*;
+import com.nttdata.accountservice.service.impl.*;
+import com.nttdata.accountservice.service.policy.*;
+import com.nttdata.accountservice.service.rules.*;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
+import org.mockito.*;
+import org.mockito.junit.jupiter.*;
+import org.springframework.dao.*;
+import org.springframework.test.util.*;
+import reactor.core.publisher.*;
+import reactor.test.*;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceImplRetryAndBenefitsFlagsTest {
-  @Mock AccountRepository repository;
-  @Mock CustomersClient customersClient;
-  @Mock CreditsClient creditsClient;
-  @Mock AccountRulesService rulesService;
-  @Mock AccountPolicyService policyService;
+  @Mock
+  AccountRepository repository;
+  @Mock
+  CustomersClient customersClient;
+  @Mock
+  CreditsClient creditsClient;
+  @Mock
+  AccountRulesService rulesService;
+  @Mock
+  AccountPolicyService policyService;
 
   AccountServiceImpl service;
 

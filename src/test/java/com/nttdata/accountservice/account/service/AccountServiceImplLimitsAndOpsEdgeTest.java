@@ -1,37 +1,45 @@
 package com.nttdata.accountservice.account.service;
 
-import com.nttdata.accountservice.integration.credits.CreditsClient;
-import com.nttdata.accountservice.integration.customers.CustomersClient;
-import com.nttdata.accountservice.model.BalanceOperationRequest;
-import com.nttdata.accountservice.model.BalanceOperationResponse;
-import com.nttdata.accountservice.model.BalanceOperationType;
-import com.nttdata.accountservice.repository.AccountRepository;
-import com.nttdata.accountservice.service.impl.AccountServiceImpl;
-import com.nttdata.accountservice.service.policy.AccountPolicyService;
-import com.nttdata.accountservice.service.rules.AccountRulesService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
+/*
+ *
+ * - getAccountLimits edge cases (contador nulo, mes distinto)
+ * - applyBalanceOperation: trim de opIds (>200) y verificación de contador
+ */
 
-import java.math.BigDecimal;
-import java.time.YearMonth;
-import java.util.ArrayList;
+import com.nttdata.accountservice.integration.credits.*;
+import com.nttdata.accountservice.integration.customers.*;
+import com.nttdata.accountservice.model.*;
+import com.nttdata.accountservice.repository.*;
+import com.nttdata.accountservice.service.impl.*;
+import com.nttdata.accountservice.service.policy.*;
+import com.nttdata.accountservice.service.rules.*;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
+import org.mockito.*;
+import org.mockito.junit.jupiter.*;
+import reactor.core.publisher.*;
+import reactor.test.*;
+
+import java.math.*;
+import java.time.*;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceImplLimitsAndOpsEdgeTest {
-  @Mock AccountRepository repository;
-  @Mock CustomersClient customersClient;
-  @Mock CreditsClient creditsClient;
-  @Mock AccountRulesService rulesService;
-  @Mock AccountPolicyService policyService;
+  @Mock
+  AccountRepository repository;
+  @Mock
+  CustomersClient customersClient;
+  @Mock
+  CreditsClient creditsClient;
+  @Mock
+  AccountRulesService rulesService;
+  @Mock
+  AccountPolicyService policyService;
 
   AccountServiceImpl service;
 

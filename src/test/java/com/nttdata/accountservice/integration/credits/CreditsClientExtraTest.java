@@ -64,4 +64,55 @@ class CreditsClientExtraTest {
           .verify();
     }
   }
+    @Test
+    void hasActiveCreditCard_tipoNoTarjeta_devuelveFalse() throws Exception {
+      try (MockWebServer server = new MockWebServer()) {
+        server.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .addHeader("Content-Type", "application/json")
+            .setBody("[{\"id\":\"CR2\",\"type\":\"CREDIT\",\"status\":\"ACTIVE\"}]"));
+        String base = server.url("/api/v1").toString();
+
+        ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+        WebClient.Builder builder = WebClient.builder().filter(noAuth);
+
+        CreditsClient client = new CreditsClient(
+            builder,
+            CircuitBreakerRegistry.ofDefaults(),
+            relaxedRegistry
+        );
+        ReflectionTestUtils.setField(client, "baseUrl", base);
+
+        StepVerifier.create(client.hasActiveCreditCard("C1"))
+            .expectNext(false)
+            .verifyComplete();
+      }
+    }
+
+    @Test
+    void hasActiveCreditCard_tarjetaNoActiva_devuelveFalse() throws Exception {
+      try (MockWebServer server = new MockWebServer()) {
+        server.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .addHeader("Content-Type", "application/json")
+            .setBody("[{\"id\":\"CR3\",\"type\":\"CREDIT_CARD\",\"status\":\"INACTIVE\"}]"));
+        String base = server.url("/api/v1").toString();
+
+        ExchangeFilterFunction noAuth = (request, next) -> next.exchange(request);
+        WebClient.Builder builder = WebClient.builder().filter(noAuth);
+
+        CreditsClient client = new CreditsClient(
+            builder,
+            CircuitBreakerRegistry.ofDefaults(),
+            relaxedRegistry
+        );
+        ReflectionTestUtils.setField(client, "baseUrl", base);
+
+        StepVerifier.create(client.hasActiveCreditCard("C1"))
+            .expectNext(false)
+            .verifyComplete();
+      }
+    }
+
+
 }

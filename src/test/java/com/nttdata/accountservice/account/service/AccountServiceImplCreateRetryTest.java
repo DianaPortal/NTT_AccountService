@@ -1,5 +1,10 @@
 package com.nttdata.accountservice.account.service;
 
+/*
+ * createAccount retry / trySaveWithRetry
+ * Cubre reintento tras DuplicateKeyException y éxito final.
+ */
+
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
 import com.nttdata.accountservice.model.*;
@@ -66,5 +71,31 @@ class AccountServiceImplCreateRetryTest {
         .verifyComplete();
 
     verify(repository, times(2)).save(any(com.nttdata.accountservice.model.entity.Account.class));
+  }
+
+  @Test
+  void createAccount_retryExhausted_lanzaErrorFinal() {
+    AccountRequest req = new AccountRequest();
+    req.setHolderDocument("87654321");
+    req.setHolderDocumentType(AccountRequest.HolderDocumentTypeEnum.DNI);
+    req.setAccountType(AccountRequest.AccountTypeEnum.SAVINGS);
+    req.setMonthlyMovementLimit(5);
+
+    when(customersClient.getEligibilityByDocument("DNI", "87654321"))
+        .thenReturn(Mono.just(new EligibilityResponse()));
+    when(rulesService.validateLegacyRules(any(), any(), any()))
+        .thenReturn(Mono.empty());
+
+    when(repository.save(any(com.nttdata.accountservice.model.entity.Account.class)))
+        .thenAnswer(inv -> Mono.error(new DuplicateKeyException("dup1")))
+        .thenAnswer(inv -> Mono.error(new DuplicateKeyException("dup2")))
+        .thenAnswer(inv -> Mono.error(new DuplicateKeyException("dup3")))
+        .thenAnswer(inv -> Mono.error(new DuplicateKeyException("dup4-final"))); // después de 3 reintentos debe propagarse
+
+    StepVerifier.create(service.createAccount(req))
+        .expectErrorSatisfies(ex -> assertInstanceOf(DuplicateKeyException.class, ex))
+        .verify();
+
+    verify(repository, atLeast(4)).save(any(com.nttdata.accountservice.model.entity.Account.class));
   }
 }

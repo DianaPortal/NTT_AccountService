@@ -1,5 +1,10 @@
 package com.nttdata.accountservice.account.service;
 
+/*
+ * getAccountById
+ * Cubre: cuenta encontrada y not found.
+ */
+
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
 import com.nttdata.accountservice.repository.*;

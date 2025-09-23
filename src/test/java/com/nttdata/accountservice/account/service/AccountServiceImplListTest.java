@@ -1,5 +1,10 @@
 package com.nttdata.accountservice.account.service;
 
+/*
+ * listAccounts
+ * Pruebas de listado básico.
+ */
+
 import com.nttdata.accountservice.integration.credits.*;
 import com.nttdata.accountservice.integration.customers.*;
 import com.nttdata.accountservice.repository.*;
