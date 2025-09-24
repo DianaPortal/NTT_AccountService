@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.regex.*;
 import java.util.stream.*;
-
+import com.nttdata.accountservice.model.entity.Account;
 import static java.util.Optional.*;
 
 
@@ -20,7 +20,7 @@ public class AccountMapper {
   private AccountMapper() {
   }
 
-  public static AccountResponse toResponse(com.nttdata.accountservice.model.entity.Account account) {
+  public static AccountResponse toResponse(Account account) {
     if (account == null) return null;
 
     AccountResponse dto = new AccountResponse();
@@ -64,15 +64,23 @@ public class AccountMapper {
     // Política por cuenta
     dto.setFreeTransactionsLimit(account.getFreeTransactionsLimit());
     dto.setCommissionFee(account.getCommissionFee());
+    // Campos solo para FIXED_TERM
+    if ("FIXED_TERM".equalsIgnoreCase(account.getAccountType())) {
+      dto.setOpeningDate(account.getOpeningDate());
+      dto.setMaturityDate(account.getMaturityDate());
+      dto.setEarlyWithdrawalPenalty(account.getEarlyWithdrawalPenalty());
+      dto.setTerm(account.getTerm());
+    }
+
 
     return dto;
   }
 
 
-  public static com.nttdata.accountservice.model.entity.Account toEntity(AccountRequest request) {
+  public static Account toEntity(AccountRequest request) {
     if (request == null) return null;
 
-    com.nttdata.accountservice.model.entity.Account acc = new com.nttdata.accountservice.model.entity.Account();
+    Account acc = new Account();
 
 
     acc.setHolderDocument(safeTrim(request.getHolderDocument()));
@@ -101,7 +109,13 @@ public class AccountMapper {
     // Política por cuenta
     acc.setFreeTransactionsLimit(request.getFreeTransactionsLimit());
     acc.setCommissionFee(request.getCommissionFee());
-
+  // Campos solo para FIXED_TERM
+    if (request.getAccountType() == AccountRequest.AccountTypeEnum.FIXED_TERM) {
+      acc.setOpeningDate(request.getOpeningDate());
+      acc.setMaturityDate(request.getMaturityDate());
+      acc.setEarlyWithdrawalPenalty(request.getEarlyWithdrawalPenalty());
+      acc.setTerm(request.getTerm());
+    }
     return acc;
   }
 
@@ -145,6 +159,17 @@ public class AccountMapper {
     // Política por cuenta
     applyIfPresent(request.getFreeTransactionsLimit(), target::setFreeTransactionsLimit);
     applyIfPresent(request.getCommissionFee(), target::setCommissionFee);
+
+    // Campos solo para FIXED_TERM (se calcula tipo efectivo: request o target)
+    String effectiveType = Optional.ofNullable(request.getAccountType())
+        .map(Enum::name)
+        .orElse(target.getAccountType());
+    if ("FIXED_TERM".equalsIgnoreCase(effectiveType)) {
+      applyIfPresent(request.getOpeningDate(), target::setOpeningDate);
+      applyIfPresent(request.getMaturityDate(), target::setMaturityDate);
+      applyIfPresent(request.getEarlyWithdrawalPenalty(), target::setEarlyWithdrawalPenalty);
+      applyIfPresent(request.getTerm(), target::setTerm);
+    }
   }
 
 
