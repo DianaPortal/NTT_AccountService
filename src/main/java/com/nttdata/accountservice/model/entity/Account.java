@@ -49,6 +49,10 @@ public class Account {
   private ArrayList<String> opIds;
   private com.nttdata.accountservice.model.entity.OpsCounter opsCounter;
 
+  private LocalDate openingDate; // solo FIXED_TERM
+  private LocalDate maturityDate; // solo FIXED_TERM
+  private BigDecimal earlyWithdrawalPenalty; // % penalización por retiro anticipado
+  private Integer term; // plazo en meses
 }
 
 

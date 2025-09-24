@@ -316,6 +316,8 @@ components:
             pattern: '^\d{8,11}$'
         accountType:
           type: string
+
+
           enum: [ SAVINGS, CHECKING, FIXED_TERM ]
           description: Tipo de cuenta
         balance:
@@ -355,6 +357,21 @@ components:
         commissionFee:
           type: number
           description: Comisión por transacción excedida
+        #Campos para cuentas a plazo fijo
+        openingDate:
+          type: string
+          format: date
+          description: Fecha de apertura de la cuenta
+        maturityDate:
+          type: string
+          format: date
+          description: Fecha de vencimiento de la cuenta
+        term:
+          type: integer
+          description: Plazo en meses o días
+        earlyWithdrawalPenalty:
+          type: number
+          description: Penalidad por retiro anticipado
 
     AccountResponse:
       type: object
@@ -406,6 +423,18 @@ components:
           type: integer
 
         commissionFee:
+          type: number
+
+        #Campos para cuentas a plazo fijo
+        openingDate:
+          type: string
+          format: date
+        maturityDate:
+          type: string
+          format: date
+        term:
+          type: integer
+        earlyWithdrawalPenalty:
           type: number
 
     LinkedCard:
